@@ -1,0 +1,306 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================
+// REGION
+// =========================
+
+model Region {
+  id          Int      @id
+
+  name        String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  districts   District[]
+  offices     Office[]
+  institutes  Institute[]
+}
+
+// =========================
+// DISTRICT
+// =========================
+
+model District {
+  id            Int      @id
+
+  name          String
+
+  regionId      Int
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  region Region @relation(fields: [regionId], references: [id])
+
+  subdivisions  Subdivision[]
+
+  institutes Institute[]
+}
+
+// =========================
+// SUBDIVISION
+// =========================
+
+model Subdivision {
+  id            Int      @id
+
+  name          String
+
+  districtId    Int
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  district District @relation(fields: [districtId], references: [id])
+
+  institutes Institute[]
+}
+
+// =========================
+// OFFICE
+// =========================
+
+model Office {
+  id              String   @id @default(uuid())
+
+  code            String   @unique
+  name            String
+
+  officeType      OfficeType
+
+  regionId        Int?
+
+  parentOfficeId  String?
+
+  phone           String?
+  email           String?
+  address         String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  region Region? @relation(fields: [regionId], references: [id])
+
+  parentOffice Office? @relation("OfficeHierarchy", fields: [parentOfficeId], references: [id])
+
+  childOffices Office[] @relation("OfficeHierarchy")
+
+  sections OfficeSection[]
+
+  primaryStaff Staff[] @relation("PrimaryOffice")
+
+  additionalStaff Staff[] @relation("AdditionalOffice")
+
+  users User[]
+
+  managedInstitutes Institute[] @relation("RegionalOfficeInstitutes")
+}
+
+// =========================
+// OFFICE TYPE
+// =========================
+
+enum OfficeType {
+  HQ
+  REGIONAL
+}
+
+// =========================
+// OFFICE SECTION
+// =========================
+
+model OfficeSection {
+  id            String   @id @default(uuid())
+
+  name          String
+
+  officeId      String
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  office Office @relation(fields: [officeId], references: [id])
+
+  designations Designation[]
+}
+
+// =========================
+// INSTITUTE
+// =========================
+
+model Institute {
+  id                String   @id @default(uuid())
+
+  code              String   @unique
+  name              String
+
+  regionId          Int
+  districtId        Int
+  subdivisionId     Int
+
+  rdOfficeId        String
+
+  principalName     String?
+
+  phone             String?
+  email             String?
+  address           String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  region Region @relation(fields: [regionId], references: [id])
+
+  district District @relation(fields: [districtId], references: [id])
+
+  subdivision Subdivision @relation(fields: [subdivisionId], references: [id])
+
+  rdOffice Office @relation("RegionalOfficeInstitutes", fields: [rdOfficeId], references: [id])
+
+  primaryStaff Staff[] @relation("PrimaryInstitute")
+
+  additionalStaff Staff[] @relation("AdditionalInstitute")
+
+  users User[]
+}
+
+// =========================
+// DESIGNATION
+// =========================
+
+model Designation {
+  id            String   @id @default(uuid())
+
+  name          String
+
+  scale         String?
+
+  category      DesignationCategory
+
+  sectionId     String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  section OfficeSection? @relation(fields: [sectionId], references: [id])
+
+  staff Staff[]
+}
+
+// =========================
+// DESIGNATION CATEGORY
+// =========================
+
+enum DesignationCategory {
+  OFFICE
+  INSTITUTE
+  COMMON
+}
+
+// =========================
+// STAFF
+// =========================
+
+model Staff {
+  id                    String   @id @default(uuid())
+
+  cnic                  String   @unique
+  name                  String
+
+  staffCategory         StaffCategory
+  staffType             StaffType
+
+  designationId         String?
+
+  // Permanent Posting
+  primaryOfficeId       String?
+  primaryInstituteId    String?
+
+  // Additional Charge
+  additionalOfficeId    String?
+  additionalInstituteId String?
+
+  phone                 String?
+  email                 String?
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  designation Designation? @relation(fields: [designationId], references: [id])
+
+  primaryOffice Office? @relation("PrimaryOffice", fields: [primaryOfficeId], references: [id])
+
+  primaryInstitute Institute? @relation("PrimaryInstitute", fields: [primaryInstituteId], references: [id])
+
+  additionalOffice Office? @relation("AdditionalOffice", fields: [additionalOfficeId], references: [id])
+
+  additionalInstitute Institute? @relation("AdditionalInstitute", fields: [additionalInstituteId], references: [id])
+
+  user User?
+}
+
+// =========================
+// STAFF CATEGORY
+// =========================
+
+enum StaffCategory {
+  PUBLIC_SERVANT
+  CIVIL_SERVANT
+  VISITING_FACULTY
+}
+
+// =========================
+// STAFF TYPE
+// =========================
+
+enum StaffType {
+  TEACHING
+  NON_TEACHING
+}
+
+// =========================
+// USER
+// =========================
+
+model User {
+  id            String   @id @default(uuid())
+
+  email         String   @unique
+  password      String
+
+  role          UserRole
+
+  isActive    Boolean  @default(true)
+
+  officeId      String?
+  instituteId   String?
+  staffId       String? @unique
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  office Office? @relation(fields: [officeId], references: [id])
+
+  institute Institute? @relation(fields: [instituteId], references: [id])
+
+  staff Staff? @relation(fields: [staffId], references: [id])
+}
+
+// =========================
+// USER ROLE
+// =========================
+
+enum UserRole {
+  SUPER_ADMIN
+  OFFICE_ADMIN
+  INSTITUTE_ADMIN
+  STAFF
+}
