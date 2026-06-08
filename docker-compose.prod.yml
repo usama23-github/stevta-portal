@@ -4,7 +4,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: strong-production-password
       POSTGRES_DB: stevta
     volumes:
       - pgdata:/var/lib/postgresql/data
