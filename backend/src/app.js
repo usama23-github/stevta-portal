@@ -3,7 +3,7 @@ import "./config/env.js";
 import express from "express";
 import cors from "cors";
 
-import authRoutes from "./routes/auth.routes.js";
+import routes from "./routes/index.js";
 import importRoutes from "./modules/imports/import.routes.js";
 
 const app = express();
@@ -11,10 +11,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/auth", authRoutes);
+app.use("/api/v1", routes);
 app.use("/api/imports", importRoutes);
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.send("STEVTA API Running");
 });
 
