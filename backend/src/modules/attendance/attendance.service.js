@@ -3,7 +3,7 @@ const path = require('path');
 
 const filePath = path.join(__dirname, 'attendance.json');
 
-async function saveAttendance(data) {
+export const saveAttendance = async (data) => {
     let records = [];
 
     try {
@@ -31,7 +31,3 @@ async function saveAttendance(data) {
 
     return attendance;
 }
-
-module.exports = {
-    saveAttendance
-};
