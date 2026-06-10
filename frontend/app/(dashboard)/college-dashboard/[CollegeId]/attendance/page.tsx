@@ -51,7 +51,7 @@ export default function AttendanceTable() {
   useEffect(() => {
     const fetchAttendanceData = async () => {
       try {
-        const response = await fetch("/attendance-data.txt");
+        const response = await fetch("/ALOG_001.txt");
 
         const text = await response.text();
 
