@@ -1,8 +1,8 @@
-import { saveAttendance } from './attendance.service.js';
+import attendanceService from './attendance.service.js';
 
 export const createAttendance = async (req, res) => {
   try {
-    const attendance = await saveAttendance(req.body);
+    const attendance = await attendanceService.saveAttendance(req.body);
 
     res.status(201).json({
       success: true,
