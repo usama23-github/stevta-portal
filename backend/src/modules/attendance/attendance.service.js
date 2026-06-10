@@ -1,0 +1,37 @@
+const fs = require('fs').promises;
+const path = require('path');
+
+const filePath = path.join(__dirname, 'attendance.json');
+
+async function saveAttendance(data) {
+    let records = [];
+
+    try {
+        const fileData = await fs.readFile(filePath, 'utf8');
+        records = JSON.parse(fileData);
+    } catch (err) {
+        // File doesn't exist yet
+        records = [];
+    }
+
+    const attendance = {
+        id: Date.now(),
+        employeeId: data.employeeId,
+        status: data.inOutStatus,
+        dateTime: data.dateTime,
+        date: new Date().toISOString()
+    };
+
+    records.push(attendance);
+
+    await fs.writeFile(
+        filePath,
+        JSON.stringify(records, null, 2)
+    );
+
+    return attendance;
+}
+
+module.exports = {
+    saveAttendance
+};
