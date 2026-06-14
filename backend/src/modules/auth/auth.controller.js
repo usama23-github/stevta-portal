@@ -18,7 +18,7 @@ export const login = async (req, res, next) => {
     try {
         const result = await loginUser(req.body);
 
-        res.cookie("token", token, {
+        res.cookie("token", result.token, {
             httpOnly: true,
             secure: false,
             sameSite: "lax",
