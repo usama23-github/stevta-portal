@@ -18,10 +18,20 @@ export const login = async (req, res, next) => {
     try {
         const result = await loginUser(req.body);
 
+        res.cookie("token", result.token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            path: "/",
+        });
+
         return res.status(200).json({
             success: true,
             message: "Login successful",
-            data: result,
+            data: {
+                user: result.user,
+            },
         });
     } catch (error) {
         next(error);

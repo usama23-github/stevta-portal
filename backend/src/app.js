@@ -2,14 +2,24 @@ import "./config/env.js";
 
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 import routes from "./routes/index.js";
 import importRoutes from "./modules/imports/import.routes.js";
 
 const app = express();
 
-app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://portal.stevta.gos.pk",
+    ],
+    credentials: true,
+  })
+);
 
 app.use("/api/v1", routes);
 app.use("/api/imports", importRoutes);
