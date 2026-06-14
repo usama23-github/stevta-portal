@@ -32,10 +32,10 @@ const SignInCard = () => {
         "https://portal.stevta.gos.pk/api/v1/auth/login",
         {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
           body: JSON.stringify({
             email,
             password,
@@ -46,12 +46,19 @@ const SignInCard = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        throw new Error(
+          data?.message || "Invalid email or password"
+        );
       }
 
-      localStorage.setItem("token", data.token);
+      // Optional: save user information
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.data.user)
+      );
 
-      router.push("/college-dashboard/1");
+      router.replace("/college-dashboard/1");
+      router.refresh();
     } catch (err) {
       setError(
         err instanceof Error
