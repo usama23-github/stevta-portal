@@ -20,6 +20,8 @@ docker exec -it stevta_backend npx prisma generate
 🚀 STEP 7 — Run Migration
 docker exec -it stevta_backend npx prisma migrate dev --name init
 
+docker exec -it stevta_backend npx prisma migrate deploy
+
 STAGING
 docker compose -f docker-compose.staging.yml up --build
 

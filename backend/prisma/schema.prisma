@@ -207,6 +207,9 @@ model Staff {
   designation           String
   department            String
 
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
 }
 
 // =========================
