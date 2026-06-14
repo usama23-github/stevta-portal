@@ -17,11 +17,14 @@ export const saveAttendance = async (data) => {
     records = [];
   }
 
+  console.log("Attendance Data", data)
+
   const attendance = {
     id: Date.now(),
         employeeId: data.employeeId,
         status: data.inOutStatus,
         dateTime: data.dateTime,
+        deviceId: data.deviceId,
         date: new Date().toISOString()
   };
 

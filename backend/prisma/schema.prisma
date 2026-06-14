@@ -196,6 +196,22 @@ enum DesignationCategory {
 }
 
 // =========================
+// ATTENDANCE
+// =========================
+
+model Attendance {
+  id                    String   @id @default(uuid())
+
+  empNo                 String
+  inOutstatus           Int
+  dateTime              DateTime
+  deviceId              String
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// =========================
 // STAFF
 // =========================
 
