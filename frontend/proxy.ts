@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 interface JwtPayload {
-  id: number;
-  email: string;
+  id: string;
   role: string;
+  officeId: string | null;
+  instituteId: string | null;
+  staffId: string | null;
 }
 
 async function verifyToken(token: string): Promise<JwtPayload> {
@@ -17,10 +19,13 @@ async function verifyToken(token: string): Promise<JwtPayload> {
   return payload as unknown as JwtPayload;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
 
-  const isAuthPage = request.nextUrl.pathname === "/sign-in";
+  console.log("TOKEN", token);
+
+  const isAuthPage =
+    request.nextUrl.pathname === "/sign-in";
 
   const protectedRoutes = [
     "/admin",
@@ -32,7 +37,6 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // Protect secured routes
   if (isProtectedRoute) {
     if (!token) {
       return NextResponse.redirect(
@@ -43,7 +47,6 @@ export async function middleware(request: NextRequest) {
     try {
       const decoded = await verifyToken(token);
 
-      // Admin-only pages
       if (
         request.nextUrl.pathname.startsWith("/admin") &&
         decoded.role !== "ADMIN"
@@ -63,16 +66,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Prevent logged-in users from opening sign-in page
   if (isAuthPage && token) {
     try {
       await verifyToken(token);
 
       return NextResponse.redirect(
-        new URL("/college-dashboard", request.url)
+        new URL("/college-dashboard")
       );
     } catch {
-      // Invalid token, allow access to login page
+      // allow access to sign-in page
     }
   }
 
