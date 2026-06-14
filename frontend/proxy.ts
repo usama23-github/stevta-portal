@@ -20,6 +20,7 @@ async function verifyToken(token: string): Promise<JwtPayload> {
 }
 
 export async function proxy(request: NextRequest) {
+  console.log("REQUEST", request);
   const token = request.cookies.get("token")?.value;
 
   console.log("TOKEN", token);
@@ -60,7 +61,7 @@ export async function proxy(request: NextRequest) {
         new URL("/sign-in", request.url)
       );
 
-      response.cookies.delete("token");
+      // response.cookies.delete("token");
 
       return response;
     }
