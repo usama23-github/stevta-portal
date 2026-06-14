@@ -212,39 +212,11 @@ enum DesignationCategory {
 model Staff {
   id                    String   @id @default(uuid())
 
-  cnic                  String   @unique
+  empNo                 String   @unique
   name                  String
+  designation           String
+  department            String
 
-  staffCategory         StaffCategory
-  staffType             StaffType
-
-  designationId         String?
-
-  // Permanent Posting
-  primaryOfficeId       String?
-  primaryInstituteId    String?
-
-  // Additional Charge
-  additionalOfficeId    String?
-  additionalInstituteId String?
-
-  phone                 String?
-  email                 String?
-
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-
-  designation Designation? @relation(fields: [designationId], references: [id])
-
-  primaryOffice Office? @relation("PrimaryOffice", fields: [primaryOfficeId], references: [id])
-
-  primaryInstitute Institute? @relation("PrimaryInstitute", fields: [primaryInstituteId], references: [id])
-
-  additionalOffice Office? @relation("AdditionalOffice", fields: [additionalOfficeId], references: [id])
-
-  additionalInstitute Institute? @relation("AdditionalInstitute", fields: [additionalInstituteId], references: [id])
-
-  user User?
 }
 
 // =========================
@@ -291,7 +263,6 @@ model User {
 
   institute Institute? @relation(fields: [instituteId], references: [id])
 
-  staff Staff? @relation(fields: [staffId], references: [id])
 }
 
 // =========================

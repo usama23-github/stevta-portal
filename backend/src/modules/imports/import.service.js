@@ -59,3 +59,31 @@ export const importHierarchy = async (rows) => {
     subdivisions: subdivisions.length,
   };
 };
+
+export const importStaff = async (rows) => {
+  const staffMap = new Map();
+
+  for (const row of rows) {
+    // STAFF
+
+    staffMap.set(row.emp_no, {
+      empNo: row.emp_no,
+      name: row.employee_name,
+      designation: row.designation,
+      department: row.department
+    });
+  }
+
+  const staff = [...staffMap.values()];
+
+  // INSERT ORDER IMPORTANT
+
+  await prisma.staff.createMany({
+    data: staff,
+    skipDuplicates: true,
+  });
+
+  return {
+    staff: staff.length,
+  };
+};
