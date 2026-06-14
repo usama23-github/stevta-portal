@@ -15,7 +15,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
   const isSignIn = pathname === "/sign-in";
   return (
     <main className="bg-neutral-100 min-h-screen">
-      <div className="flex flex-col items-center justify-center pt-4 md:pt-10">
+      <div className="md:flex flex-col items-center justify-center md:pt-10">
         {children}
       </div>
     </main>
