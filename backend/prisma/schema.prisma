@@ -95,10 +95,6 @@ model Office {
 
   sections OfficeSection[]
 
-  primaryStaff Staff[] @relation("PrimaryOffice")
-
-  additionalStaff Staff[] @relation("AdditionalOffice")
-
   users User[]
 
   managedInstitutes Institute[] @relation("RegionalOfficeInstitutes")
@@ -165,10 +161,6 @@ model Institute {
 
   rdOffice Office @relation("RegionalOfficeInstitutes", fields: [rdOfficeId], references: [id])
 
-  primaryStaff Staff[] @relation("PrimaryInstitute")
-
-  additionalStaff Staff[] @relation("AdditionalInstitute")
-
   users User[]
 }
 
@@ -191,8 +183,6 @@ model Designation {
   updatedAt     DateTime @updatedAt
 
   section OfficeSection? @relation(fields: [sectionId], references: [id])
-
-  staff Staff[]
 }
 
 // =========================
@@ -254,7 +244,6 @@ model User {
 
   officeId      String?
   instituteId   String?
-  staffId       String? @unique
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
