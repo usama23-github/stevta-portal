@@ -33,7 +33,7 @@ export async function getAllStaff(
     }
 
     const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/staff?${params}`,
+        `https://portal.stevta.gos.pk/api/v1/staff?${params}`,
         {
             credentials: "include",
             cache: "no-store",

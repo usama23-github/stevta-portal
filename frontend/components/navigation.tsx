@@ -35,8 +35,8 @@ const routes = [
     activeIcon: GoOrganization, // style-based active
   },
   {
-    label: "Staffs",
-    href: "/staffs",
+    label: "Staff",
+    href: "/staff",
     icon: Users,
     activeIcon: Users,
   },
