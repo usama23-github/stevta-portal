@@ -218,6 +218,38 @@ model Staff {
 // =========================
 
 model Attendance {
+  id                 String   @id @default(uuid())
+
+  empNo              String
+
+  attendanceDate     DateTime
+
+  attendanceStatusId Int
+
+  checkInTime        DateTime?
+  checkInStatusId    Int?
+
+  checkOutTime       DateTime?
+  checkOutStatusId   Int?
+
+  leaveTypeId        Int?
+
+  deviceId           String?
+
+  staff              Staff    @relation(fields: [empNo], references: [empNo])
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([empNo])
+  @@index([attendanceDate])
+}
+
+// =========================
+// ATTENDANCE LOGS
+// =========================
+
+model AttendanceLogs {
   id            String   @id @default(uuid())
 
   empNo         String
@@ -225,12 +257,9 @@ model Attendance {
   dateTime      DateTime
   deviceId      String
 
-  staff         Staff    @relation(fields: [empNo], references: [empNo])
-
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  @@index([empNo])
 }
 
 // =========================

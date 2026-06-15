@@ -20,6 +20,9 @@ docker exec -it stevta_backend npx prisma generate
 🚀 STEP 7 — Run Migration
 docker exec -it stevta_backend npx prisma migrate dev --name init
 
+docker exec -it stevta-portal-backend-1 \
+npx prisma migrate resolve --applied 20260615204912_init
+
 docker exec -it stevta_backend npx prisma migrate deploy
 
 STAGING
