@@ -1,70 +1,275 @@
-// "use client";
+"use client";
 
-// import { DottedSeparator } from "@/components/dotted-separator";
-// import { useQueryState } from "nuqs";
-// import { Button } from "@/components/ui/button";
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import { Loader, PlusIcon } from "lucide-react";
-// import { DataFilters } from "@/features/tasks/components/data-filters";
-// import { useTaskFilters } from "@/features/tasks/hooks/use-task-filters";
-// import { DataTable } from "@/features/tasks/components/data-table";
-// import { columns } from "@/features/tasks/components/columns";
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Clock3,
+  CheckCircle2,
+  XCircle,
+  CalendarDays,
+} from "lucide-react";
 
-// interface TaskViewSwitcherProps {
-//   hideDepartmentFilter?: boolean;
-// }
+import { getAllStaff, Staff } from "@/lib/api/staff";
 
-// const StaffsPage = ({ hideDepartmentFilter }: TaskViewSwitcherProps) => {
-//   const [{ status, departmentId, dueDate, coType, coName, receivedThrough }] =
-//     useTaskFilters();
+export default function StaffTable() {
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [search, setSearch] = useState("");
 
-//   const [view, setView] = useQueryState("task-view", {
-//     defaultValue: "table",
-//   });
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStaff, setTotalStaff] = useState(0);
+  const [limit, setLimit] = useState(10);
+  const [showRecords, setShowRecords] = useState(0);
 
-//   return (
-//     <Tabs
-//       defaultValue={view}
-//       onValueChange={setView}
-//       className="flex-1 w-full border rounded-lg"
-//     >
-//       <div className="h-full flex flex-col overflow-auto p-4">
-//         <div className="flex flex-col gap-y-2 lg:flex-row justify-between items-center">
-//           <p className="text-lg font-semibold">Staffs</p>
-//           <Button size="sm" className="w-full lg:w-auto">
-//             <PlusIcon className="size-4 mr-2" />
-//             New
-//           </Button>
-//         </div>
-//         <DottedSeparator className="my-4" />
-//         <DataFilters hideDepartmentFilter={hideDepartmentFilter} />
-//         <DottedSeparator className="my-4" />
-//         {false ? (
-//           <div className="w-full border rounded-lg h-[200px] flex flex-col items-center justify-center">
-//             <Loader className="size-5 animate-spin text-muted-foreground" />
-//           </div>
-//         ) : (
-//           <>
-//             <TabsContent value="table" className="mt-0">
-//               <DataTable columns={columns} data={[]} />
-//             </TabsContent>
-//             <TabsContent value="kanban" className="mt-0">
+  const [loading, setLoading] = useState(false);
 
-//             </TabsContent>
-//             <TabsContent value="calendar" className="mt-0 h-full pb-4">
+  const loadData = async (
+    pageNumber = page,
+    searchValue = search
+  ) => {
+    try {
+      setLoading(true);
 
-//             </TabsContent>
-//           </>
-//         )}
-//       </div>
-//     </Tabs>
-//   );
-// };
+      const result = await getAllStaff(
+        pageNumber,
+        10,
+        searchValue
+      );
 
-// export default StaffsPage;
+      setStaff(result.data);
+      setTotalPages(result.meta.totalPages);
+      setTotalStaff(result.meta.total);
+      setLimit(result.meta.limit);
+      setShowRecords(result.data.length);
 
-const StaffsPage = () => {
-  return <h1>Staff Page</h1>;
-};
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-export default StaffsPage;
+  useEffect(() => {
+    loadData(page);
+  }, [page]);
+
+  const handleSearch = async (searchValue: any) => {
+    setPage(1);
+    loadData(1, searchValue);
+  };
+
+  return (
+    <>
+      <div className="mt-8 rounded-3xl border border-[#dbe4f0] bg-white shadow-sm">
+        {/* HEADER */}
+        <div className="flex flex-col gap-4 border-b border-[#e2e8f0] p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-[#0f172a]">
+              Staff Record
+            </h2>
+          </div>
+
+          {/* FILTERS */}
+          <div className="flex flex-col gap-3 lg:flex-row">
+            {/* SEARCH */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
+
+              <input
+                type="text"
+                placeholder="Search staff..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                  if (e.target.value === "") {
+                    handleSearch(e.target.value);
+                  }
+                }}
+                className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+              />
+              <Button className="absolute right-0 h-11" onClick={() => handleSearch(search)}>
+                Search
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          {loading ? (
+            <div className="mt-8 rounded-3xl bg-white p-10 text-center shadow-sm">
+              <p className="text-[#64748b]">Loading staff records...</p>
+            </div>
+          ) : (
+            <table className="w-full min-w-[1200px]">
+              <thead className="bg-[#f8fafc]">
+                <tr>
+                  {[
+                    "Staff Name",
+                    "Designation",
+                    "Department",
+                  ].map((heading) => (
+                    <th
+                      key={heading}
+                      className="border-b border-[#e2e8f0] px-6 py-4 text-left text-sm font-semibold text-[#334155]"
+                    >
+                      {heading}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {staff.map((record) => (
+                  <tr key={record.id} className="transition hover:bg-[#f8fafc]">
+                    {/* NAME */}
+                    <td className="border-b border-[#f1f5f9] px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dbeafe] font-semibold text-[#2563eb]">
+                          {record.name.charAt(0)}
+                        </div>
+
+                        <div>
+                          <p className="font-semibold text-[#0f172a]">
+                            {record.name}
+                          </p>
+
+                          <p className="text-xs text-[#64748b]">
+                            Staff ID #{record.empNo}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* DESIGNATION */}
+                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
+                      {record.designation}
+                    </td>
+
+                    {/* DEPARTMENT */}
+                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
+                      {record.department}
+                    </td>
+                  </tr>
+                ))}
+
+                {staff.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="px-6 py-16 text-center text-[#64748b]"
+                    >
+                      No staff records found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+
+
+            </table>
+          )}
+
+        </div>
+
+        {loading === false && (
+          <>
+            {/* FOOTER */}
+            <div className="flex flex-col gap-4 border-t border-[#e2e8f0] p-6 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#64748b]">
+                Showing{" "}
+                <span className="font-semibold text-[#0f172a]">
+                  {showRecords}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-[#0f172a]">
+                  {totalStaff}
+                </span>{" "}
+                records
+              </p>
+
+              {/* PAGINATION */}
+              <div className="items-center gap-2 overflow-x-scroll hidden md:flex">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((prev) => prev - 1)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dbe4f0] bg-white text-[#334155] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setPage(index + 1)}
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition ${page === index + 1
+                      ? "bg-[#2563eb] text-white"
+                      : "border border-[#dbe4f0] bg-white text-[#334155] hover:bg-[#f8fafc]"
+                      }`}
+                  >
+                    {index + 1}
+                  </button>
+                ))}
+
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage((prev) => prev + 1)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dbe4f0] bg-white text-[#334155] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+
+
+            </div>
+            <div className="space-y-4 md:hidden pb-4 px-4">
+
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="outline"
+                  disabled={page === 1}
+                  onClick={() =>
+                    setPage((prev) => prev - 1)
+                  }
+                >
+                  Previous
+                </Button>
+
+                <span>
+                  <p className="text-sm text-[#64748b]">
+                    Page{" "}
+                    <span className="font-semibold text-[#0f172a]">
+                      {page}
+                    </span>{" "}
+                    of{" "}
+                    <span className="font-semibold text-[#0f172a]">
+                      {totalPages}
+                    </span>
+                  </p>
+                </span>
+
+                <Button
+                  variant="outline"
+                  disabled={page === totalPages}
+                  onClick={() =>
+                    setPage((prev) => prev + 1)
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+
+      </div>
+
+
+    </>
+  );
+}
