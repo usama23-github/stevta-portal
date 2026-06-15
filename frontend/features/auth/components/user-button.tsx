@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -10,8 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DottedSeparator } from "@/components/dotted-separator";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const UserButton = () => {
+  const router = useRouter();
   const isLoading = false;
 
   const user = {
@@ -36,6 +40,46 @@ export const UserButton = () => {
   const avatarFallback = name
     ? name.charAt(0).toUpperCase()
     : (email.charAt(0).toUpperCase() ?? "U");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await fetch(
+        "https://portal.stevta.gos.pk/api/v1/auth/logout",
+        {
+          method: "POST",
+          credentials: "include"
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || "Something went wrong"
+        );
+      }
+
+      // delete user information
+      localStorage.removeItem("user");
+
+      router.replace("/sign-in");
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <DropdownMenu modal={false}>
@@ -66,15 +110,14 @@ export const UserButton = () => {
           </div>
         </div>
         <DottedSeparator className="mb-1" />
-        <Link href="/sign-in">
-          <DropdownMenuItem
-            onClick={() => console.log("User logout")}
-            className="h-10 flex items-center justify-center text-amber-700 font-medium cursor-pointer"
-          >
-            <LogOut className="size-4 mr-2" />
-            Log out
-          </DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem
+          onClick={handleLogout}
+          disabled={loading}
+          className="h-10 flex items-center justify-center text-amber-700 font-medium cursor-pointer"
+        >
+          <LogOut className="size-4 mr-2" />
+          {loading ? "Loging out..." : "Log out"}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

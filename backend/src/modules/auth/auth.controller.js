@@ -1,4 +1,4 @@
-import { registerUser, loginUser, logoutUser } from "./auth.service.js";
+import { registerUser, loginUser } from "./auth.service.js";
 
 export const register = async (req, res, next) => {
     try {
@@ -38,15 +38,13 @@ export const login = async (req, res, next) => {
     }
 };
 
-export const logout = async (req, res, next) => {
-    try {
-        const result = await logoutUser();
+export const logout = (req, res) => {
+    res.clearCookie("token", {
+        path: "/",
+    });
 
-        return res.status(200).json({
-            success: true,
-            ...result,
-        });
-    } catch (error) {
-        next(error);
-    }
+    return res.status(200).json({
+        success: true,
+        message: "Logged out successfully",
+    });
 };
