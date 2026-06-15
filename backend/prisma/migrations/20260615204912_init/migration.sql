@@ -1,15 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `email` on the `User` table. All the data in the column will be lost.
-  - You are about to drop the column `name` on the `User` table. All the data in the column will be lost.
-  - A unique constraint covering the columns `[username]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - A unique constraint covering the columns `[staffId]` on the table `User` will be added. If there are existing duplicate values, this will fail.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `username` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Changed the type of `role` on the `User` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
-
-*/
 -- CreateEnum
 CREATE TYPE "OfficeType" AS ENUM ('HQ', 'REGIONAL');
 
@@ -23,26 +11,11 @@ CREATE TYPE "StaffCategory" AS ENUM ('PUBLIC_SERVANT', 'CIVIL_SERVANT', 'VISITIN
 CREATE TYPE "StaffType" AS ENUM ('TEACHING', 'NON_TEACHING');
 
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('HQ_ADMIN', 'OFFICE', 'INSTITUTE', 'STAFF');
-
--- DropIndex
-DROP INDEX "User_email_key";
-
--- AlterTable
-ALTER TABLE "User" DROP COLUMN "email",
-DROP COLUMN "name",
-ADD COLUMN     "instituteId" TEXT,
-ADD COLUMN     "officeId" TEXT,
-ADD COLUMN     "staffId" TEXT,
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ADD COLUMN     "username" TEXT NOT NULL,
-DROP COLUMN "role",
-ADD COLUMN     "role" "UserRole" NOT NULL;
+CREATE TYPE "UserRole" AS ENUM ('SUPER_ADMIN', 'OFFICE_ADMIN', 'INSTITUTE_ADMIN', 'STAFF');
 
 -- CreateTable
 CREATE TABLE "Region" (
-    "id" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
+    "id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -52,10 +25,9 @@ CREATE TABLE "Region" (
 
 -- CreateTable
 CREATE TABLE "District" (
-    "id" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
+    "id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
-    "regionId" TEXT NOT NULL,
+    "regionId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -64,10 +36,9 @@ CREATE TABLE "District" (
 
 -- CreateTable
 CREATE TABLE "Subdivision" (
-    "id" TEXT NOT NULL,
-    "code" TEXT NOT NULL,
+    "id" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
-    "districtId" TEXT NOT NULL,
+    "districtId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -80,7 +51,7 @@ CREATE TABLE "Office" (
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "officeType" "OfficeType" NOT NULL,
-    "regionId" TEXT,
+    "regionId" INTEGER,
     "parentOfficeId" TEXT,
     "phone" TEXT,
     "email" TEXT,
@@ -107,9 +78,9 @@ CREATE TABLE "Institute" (
     "id" TEXT NOT NULL,
     "code" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "regionId" TEXT NOT NULL,
-    "districtId" TEXT NOT NULL,
-    "subdivisionId" TEXT NOT NULL,
+    "regionId" INTEGER NOT NULL,
+    "districtId" INTEGER NOT NULL,
+    "subdivisionId" INTEGER NOT NULL,
     "rdOfficeId" TEXT NOT NULL,
     "principalName" TEXT,
     "phone" TEXT,
@@ -137,31 +108,43 @@ CREATE TABLE "Designation" (
 -- CreateTable
 CREATE TABLE "Staff" (
     "id" TEXT NOT NULL,
-    "cnic" TEXT NOT NULL,
+    "empNo" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "staffCategory" "StaffCategory" NOT NULL,
-    "staffType" "StaffType" NOT NULL,
-    "designationId" TEXT,
-    "primaryOfficeId" TEXT,
-    "primaryInstituteId" TEXT,
-    "additionalOfficeId" TEXT,
-    "additionalInstituteId" TEXT,
-    "phone" TEXT,
-    "email" TEXT,
+    "designation" TEXT NOT NULL,
+    "department" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Staff_pkey" PRIMARY KEY ("id")
 );
 
--- CreateIndex
-CREATE UNIQUE INDEX "Region_code_key" ON "Region"("code");
+-- CreateTable
+CREATE TABLE "Attendance" (
+    "id" TEXT NOT NULL,
+    "empNo" TEXT NOT NULL,
+    "inOutstatus" INTEGER NOT NULL,
+    "dateTime" TIMESTAMP(3) NOT NULL,
+    "deviceId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- CreateIndex
-CREATE UNIQUE INDEX "District_code_key" ON "District"("code");
+    CONSTRAINT "Attendance_pkey" PRIMARY KEY ("id")
+);
 
--- CreateIndex
-CREATE UNIQUE INDEX "Subdivision_code_key" ON "Subdivision"("code");
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "officeId" TEXT,
+    "instituteId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Office_code_key" ON "Office"("code");
@@ -170,13 +153,13 @@ CREATE UNIQUE INDEX "Office_code_key" ON "Office"("code");
 CREATE UNIQUE INDEX "Institute_code_key" ON "Institute"("code");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Staff_cnic_key" ON "Staff"("cnic");
+CREATE UNIQUE INDEX "Staff_empNo_key" ON "Staff"("empNo");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
+CREATE INDEX "Attendance_empNo_idx" ON "Attendance"("empNo");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_staffId_key" ON "User"("staffId");
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- AddForeignKey
 ALTER TABLE "District" ADD CONSTRAINT "District_regionId_fkey" FOREIGN KEY ("regionId") REFERENCES "Region"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -209,25 +192,10 @@ ALTER TABLE "Institute" ADD CONSTRAINT "Institute_rdOfficeId_fkey" FOREIGN KEY (
 ALTER TABLE "Designation" ADD CONSTRAINT "Designation_sectionId_fkey" FOREIGN KEY ("sectionId") REFERENCES "OfficeSection"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Staff" ADD CONSTRAINT "Staff_designationId_fkey" FOREIGN KEY ("designationId") REFERENCES "Designation"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Staff" ADD CONSTRAINT "Staff_primaryOfficeId_fkey" FOREIGN KEY ("primaryOfficeId") REFERENCES "Office"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Staff" ADD CONSTRAINT "Staff_primaryInstituteId_fkey" FOREIGN KEY ("primaryInstituteId") REFERENCES "Institute"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Staff" ADD CONSTRAINT "Staff_additionalOfficeId_fkey" FOREIGN KEY ("additionalOfficeId") REFERENCES "Office"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Staff" ADD CONSTRAINT "Staff_additionalInstituteId_fkey" FOREIGN KEY ("additionalInstituteId") REFERENCES "Institute"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_empNo_fkey" FOREIGN KEY ("empNo") REFERENCES "Staff"("empNo") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_officeId_fkey" FOREIGN KEY ("officeId") REFERENCES "Office"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_instituteId_fkey" FOREIGN KEY ("instituteId") REFERENCES "Institute"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "Staff"("id") ON DELETE SET NULL ON UPDATE CASCADE;

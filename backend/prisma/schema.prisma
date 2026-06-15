@@ -196,36 +196,41 @@ enum DesignationCategory {
 }
 
 // =========================
-// ATTENDANCE
-// =========================
-
-model Attendance {
-  id                    String   @id @default(uuid())
-
-  empNo                 String
-  inOutstatus           Int
-  dateTime              DateTime
-  deviceId              String
-
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-}
-
-// =========================
 // STAFF
 // =========================
 
 model Staff {
-  id                    String   @id @default(uuid())
+  id            String   @id @default(uuid())
 
-  empNo                 String   @unique
-  name                  String
-  designation           String
-  department            String
+  empNo         String   @unique
+  name          String
+  designation   String
+  department    String
+
+  attendances   Attendance[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// =========================
+// ATTENDANCE
+// =========================
+
+model Attendance {
+  id            String   @id @default(uuid())
+
+  empNo         String
+  inOutstatus   Int
+  dateTime      DateTime
+  deviceId      String
+
+  staff         Staff    @relation(fields: [empNo], references: [empNo])
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@index([empNo])
 }
 
 // =========================
