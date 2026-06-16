@@ -241,6 +241,8 @@ model Attendance {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
+  @@unique([empNo, attendanceDate])
+
   @@index([empNo])
   @@index([attendanceDate])
 }
