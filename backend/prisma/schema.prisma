@@ -255,10 +255,12 @@ model AttendanceLogs {
   empNo         String
   inOutstatus   Int
   dateTime      DateTime
-  deviceId      String
+  deviceId      Int
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@unique([empNo, dateTime, deviceId])
 
 }
 
