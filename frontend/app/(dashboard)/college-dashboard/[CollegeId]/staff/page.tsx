@@ -268,8 +268,6 @@ export default function StaffTable() {
         )}
 
       </div>
-
-
     </>
   );
 }
