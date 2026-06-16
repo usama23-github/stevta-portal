@@ -234,7 +234,7 @@ model Attendance {
 
   leaveTypeId        Int?
 
-  deviceId           String?
+  deviceId           Int?
 
   staff              Staff    @relation(fields: [empNo], references: [empNo])
 
@@ -253,7 +253,7 @@ model AttendanceLogs {
   id            String   @id @default(uuid())
 
   empNo         String
-  inOutstatus   Int
+  inOutStatus   Int
   dateTime      DateTime
   deviceId      Int
 
