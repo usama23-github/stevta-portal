@@ -2,7 +2,8 @@ import {
     saveAttendance,
     createAttendanceLog,
     generateAttendanceService,
-    getAttendanceLogsService
+    getAttendanceLogsService,
+    getStaffAttendanceService
 } from "./attendance.service.js";
 
 export const createAttendance = async (req, res, next) => {
@@ -57,6 +58,25 @@ export const getAttendanceLogs = async (
         return res.status(200).json({
             success: true,
             data: logs,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getStaffAttendance = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result = await getStaffAttendanceService(
+            req.query
+        );
+
+        return res.status(200).json({
+            success: true,
+            result,
         });
     } catch (error) {
         next(error);

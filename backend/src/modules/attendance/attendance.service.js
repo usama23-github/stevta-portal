@@ -254,3 +254,159 @@ export const getAttendanceLogsService =
       },
     });
   };
+
+export const getStaffAttendanceService =
+  async (query) => {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const date = query.date
+      ? new Date(query.date)
+      : new Date();
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const where = {
+      attendanceDate: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    };
+
+    if (query.attendanceStatusId) {
+      where.attendanceStatusId = Number(
+        query.attendanceStatusId
+      );
+    }
+
+    if (query.search) {
+      where.staff = {
+        OR: [
+          {
+            empNo: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            name: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            designation: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+          {
+            department: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+        ],
+      };
+    }
+
+    const [rows, total] =
+      await prisma.$transaction([
+        prisma.attendance.findMany({
+          where,
+
+          include: {
+            staff: {
+              select: {
+                empNo: true,
+                name: true,
+                designation: true,
+                department: true,
+              },
+            },
+          },
+
+          skip,
+          take: limit,
+
+          orderBy: {
+            attendanceDate: "desc",
+          },
+        }),
+
+        prisma.attendance.count({
+          where,
+        }),
+      ]);
+
+    const data = rows.map((row) => {
+      let workingHours = null;
+
+      if (row.checkInTime && row.checkOutTime) {
+        const diffMs = row.checkOutTime - row.checkInTime;
+
+        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+        const minutes = Math.floor(
+          (diffMs % (1000 * 60 * 60)) / (1000 * 60)
+        );
+
+        workingHours = `${hours}:${minutes
+          .toString()
+          .padStart(2, "0")}`;
+      }
+
+      return {
+        empNo: row.staff.empNo,
+        employeeName: row.staff.name,
+        designation: row.staff.designation,
+        department: row.staff.department,
+
+        date: row.attendanceDate,
+
+        attendanceStatus: row.attendanceStatusId,
+
+        checkIn: row.checkInTime
+          ? row.checkInTime.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+          : null,
+
+        checkInStatus: row.checkInStatusId,
+
+        checkOut: row.checkOutTime
+          ? row.checkOutTime.toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+          : null,
+
+        checkOutStatus: row.checkOutStatusId,
+
+        workingHours,
+      };
+    });
+
+    return {
+      data,
+
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(
+          total / limit
+        ),
+      },
+    };
+  };
