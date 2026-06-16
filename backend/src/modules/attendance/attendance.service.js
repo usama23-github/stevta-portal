@@ -1,6 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,4 +39,24 @@ export const saveAttendance = async (data) => {
   );
 
   return attendance;
+};
+
+export const createAttendanceLog = async (payload) => {
+  const {
+    empNo,
+    inOutstatus,
+    dateTime,
+    deviceId,
+  } = payload;
+
+  const attendanceLog = await prisma.attendanceLogs.create({
+    data: {
+      empNo,
+      inOutstatus,
+      dateTime: new Date(dateTime),
+      deviceId,
+    },
+  });
+
+  return attendanceLog;
 };
