@@ -122,13 +122,31 @@ CREATE TABLE "Staff" (
 CREATE TABLE "Attendance" (
     "id" TEXT NOT NULL,
     "empNo" TEXT NOT NULL,
-    "inOutstatus" INTEGER NOT NULL,
-    "dateTime" TIMESTAMP(3) NOT NULL,
-    "deviceId" TEXT NOT NULL,
+    "attendanceDate" TIMESTAMP(3) NOT NULL,
+    "attendanceStatusId" INTEGER NOT NULL,
+    "checkInTime" TIMESTAMP(3),
+    "checkInStatusId" INTEGER,
+    "checkOutTime" TIMESTAMP(3),
+    "checkOutStatusId" INTEGER,
+    "leaveTypeId" INTEGER,
+    "deviceId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Attendance_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AttendanceLogs" (
+    "id" TEXT NOT NULL,
+    "empNo" TEXT NOT NULL,
+    "inOutStatus" INTEGER NOT NULL,
+    "dateTime" TIMESTAMP(3) NOT NULL,
+    "deviceId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AttendanceLogs_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -157,6 +175,12 @@ CREATE UNIQUE INDEX "Staff_empNo_key" ON "Staff"("empNo");
 
 -- CreateIndex
 CREATE INDEX "Attendance_empNo_idx" ON "Attendance"("empNo");
+
+-- CreateIndex
+CREATE INDEX "Attendance_attendanceDate_idx" ON "Attendance"("attendanceDate");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "AttendanceLogs_empNo_dateTime_deviceId_key" ON "AttendanceLogs"("empNo", "dateTime", "deviceId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
