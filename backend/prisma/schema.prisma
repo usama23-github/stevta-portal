@@ -253,7 +253,7 @@ model AttendanceLogs {
   id            String   @id @default(uuid())
 
   empNo         String
-  inOutStatus   Int
+  inOutStatus   Int?
   dateTime      DateTime
   deviceId      Int
 

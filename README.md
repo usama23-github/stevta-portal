@@ -21,7 +21,7 @@ docker exec -it stevta_backend npx prisma generate
 docker exec -it stevta_backend npx prisma migrate dev --name init
 
 docker exec -it stevta-portal-backend-1 \
-npx prisma migrate resolve --applied 20260615204912_init
+npx prisma migrate resolve --applied 20260616092123_correct_in_out_status_device_id_to_int
 
 docker exec -it stevta_backend npx prisma migrate deploy
 
