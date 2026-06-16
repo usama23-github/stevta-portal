@@ -6,8 +6,15 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: strong-production-password
       POSTGRES_DB: stevta
+      TZ: Asia/Karachi
+      PGTZ: Asia/Karachi
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stevta"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -16,18 +23,25 @@ services:
     restart: always
     env_file:
       - ./backend/.env.production
+    environment:
+      TZ: Asia/Karachi
+      NODE_ENV: production
     ports:
       - "5000:5000"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    restart: always
     env_file:
       - ./frontend/.env.production
-    restart: always
+    environment:
+      TZ: Asia/Karachi
+      NODE_ENV: production
     ports:
       - "3000:3000"
     depends_on:
