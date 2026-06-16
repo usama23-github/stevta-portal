@@ -61,8 +61,6 @@ export const createAttendanceLog = async (payload) => {
   return attendanceLog;
 };
 
-import prisma from "../../config/prisma.js";
-
 const ATTENDANCE_STATUS = {
   PRESENT: 1,
   ABSENT: 2,
