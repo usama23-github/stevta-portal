@@ -44,7 +44,7 @@ export const saveAttendance = async (data) => {
 export const createAttendanceLog = async (payload) => {
   const {
     empNo,
-    inOutstatus,
+    inOutStatus,
     dateTime,
     deviceId,
   } = payload;
@@ -52,7 +52,7 @@ export const createAttendanceLog = async (payload) => {
   const attendanceLog = await prisma.attendanceLogs.create({
     data: {
       empNo,
-      inOutstatus,
+      inOutStatus,
       dateTime: new Date(dateTime),
       deviceId,
     },
