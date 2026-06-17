@@ -375,7 +375,9 @@ export const getStaffAttendanceService =
         designation: row.staff.designation,
         department: row.staff.department,
 
-        date: row.attendanceDate,
+        date: dayjs(row.attendanceDate)
+          .tz("Asia/Karachi")
+          .format("YYYY-MM-DD"),
 
         attendanceStatus: row.attendanceStatusId,
 
