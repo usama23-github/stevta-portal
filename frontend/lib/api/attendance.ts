@@ -39,7 +39,7 @@ export async function getStaffAttendance(
     }
 
     if (attendanceStatusId.trim()) {
-        params.append("attendanceStatus", attendanceStatusId);
+        params.append("attendanceStatusId", attendanceStatusId);
     }
 
     if (date.trim()) {

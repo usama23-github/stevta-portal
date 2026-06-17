@@ -29,7 +29,7 @@ export default function AttendanceTable() {
 
   const [search, setSearch] = useState("");
 
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [selectedDate, setSelectedDate] = useState(today);
 
