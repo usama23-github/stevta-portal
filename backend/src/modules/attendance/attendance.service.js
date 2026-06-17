@@ -2,6 +2,12 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { PrismaClient } from "@prisma/client";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const prisma = new PrismaClient();
 
@@ -49,11 +55,13 @@ export const createAttendanceLog = async (payload) => {
     deviceId,
   } = payload;
 
+  const parsedDate = dayjs.tz(dateTime, "Asia/Karachi").toDate();
+
   const attendanceLog = await prisma.attendanceLogs.create({
     data: {
       empNo,
       inOutStatus,
-      dateTime: new Date(dateTime),
+      dateTime: new Date(parsedDate),
       deviceId,
     },
   });
