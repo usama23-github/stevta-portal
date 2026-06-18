@@ -293,6 +293,12 @@ export const getStaffAttendanceService =
       );
     }
 
+    if (query.checkInStatusId) {
+      where.checkInStatusId = Number(
+        query.checkInStatusId
+      );
+    }
+
     if (query.search) {
       where.staff = {
         OR: [
