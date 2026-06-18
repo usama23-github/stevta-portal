@@ -3,7 +3,8 @@ import {
     createAttendanceLog,
     generateAttendanceService,
     getAttendanceLogsService,
-    getStaffAttendanceService
+    getStaffAttendanceService,
+    deleteAllAttendanceService
 } from "./attendance.service.js";
 
 export const createAttendance = async (req, res, next) => {
@@ -77,6 +78,26 @@ export const getStaffAttendance = async (
         return res.status(200).json({
             success: true,
             result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const deleteAllAttendance = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result =
+            await deleteAllAttendanceService();
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "All attendance records deleted successfully",
+            deletedCount: result.count,
         });
     } catch (error) {
         next(error);

@@ -420,3 +420,14 @@ export const getStaffAttendanceService =
       },
     };
   };
+
+export const deleteAllAttendanceService =
+  async (confirm) => {
+    if (confirm !== "YES") {
+      throw new Error(
+        "Pass confirm=YES to delete all attendance"
+      );
+    }
+
+    return prisma.attendance.deleteMany({});
+  };
