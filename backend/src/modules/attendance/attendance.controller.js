@@ -85,21 +85,23 @@ export const getStaffAttendance = async (
 };
 
 export const deleteAllAttendance = async (
-    req,
-    res,
-    next
+  req,
+  res,
+  next
 ) => {
-    try {
-        const result =
-            await deleteAllAttendanceService();
+  try {
+    const result =
+      await deleteAllAttendanceService(
+        req.query.confirm
+      );
 
-        return res.status(200).json({
-            success: true,
-            message:
-                "All attendance records deleted successfully",
-            deletedCount: result.count,
-        });
-    } catch (error) {
-        next(error);
-    }
+    return res.status(200).json({
+      success: true,
+      message:
+        "All attendance records deleted successfully",
+      deletedCount: result.count,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
