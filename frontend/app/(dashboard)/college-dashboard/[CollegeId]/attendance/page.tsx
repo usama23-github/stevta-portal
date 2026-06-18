@@ -167,7 +167,7 @@ export default function AttendanceTable() {
                   }}
                   className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
                 >
-                  <option value="">Attendance Status</option>
+                  <option value="">All Attendance Status</option>
                   <option value="1">Present</option>
                   <option value="2">Absent</option>
                 </select>
@@ -186,7 +186,7 @@ export default function AttendanceTable() {
                   }}
                   className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
                 >
-                  <option value="">Check In Status</option>
+                  <option value="">All Check In Status</option>
                   <option value="1">On Time</option>
                   <option value="2">Late</option>
                 </select>
