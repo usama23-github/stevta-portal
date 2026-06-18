@@ -213,9 +213,9 @@ export default function AttendanceTable() {
                     "Department",
                     "Date",
                     "Attendance",
-                    "Check In",
+                    "Check In Time",
                     "Check In Status",
-                    "Check Out",
+                    "Check Out Time",
                     "Check Out Status",
                     "Working Hours",
                   ].map((heading) => (
