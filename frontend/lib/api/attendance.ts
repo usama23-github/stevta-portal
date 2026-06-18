@@ -28,6 +28,7 @@ export async function getStaffAttendance(
     search = "",
     attendanceStatusId = "",
     date = "",
+    checkInStatusId = "",
 ): Promise<StaffAttendanceResponse> {
     const params = new URLSearchParams({
         page: page.toString(),
@@ -44,6 +45,10 @@ export async function getStaffAttendance(
 
     if (date.trim()) {
         params.append("date", date);
+    }
+
+    if (checkInStatusId.trim()) {
+        params.append("checkInStatusId", checkInStatusId);
     }
 
     const response = await fetch(

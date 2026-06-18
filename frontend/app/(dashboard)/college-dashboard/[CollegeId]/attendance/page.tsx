@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  UserCheck,
   Clock3,
   CheckCircle2,
   XCircle,
@@ -30,6 +31,7 @@ export default function AttendanceTable() {
   const [search, setSearch] = useState("");
 
   const [statusFilter, setStatusFilter] = useState("");
+  const [checkInStatusFilter, setCheckInStatusFilterFilter] = useState("");
 
   const [selectedDate, setSelectedDate] = useState(today);
 
@@ -43,7 +45,8 @@ export default function AttendanceTable() {
     pageNumber = page,
     searchValue = search,
     attendanceStatusId = statusFilter,
-    date = selectedDate
+    date = selectedDate,
+    checkInStatusId = checkInStatusFilter
   ) => {
     try {
       setLoading(true);
@@ -53,7 +56,8 @@ export default function AttendanceTable() {
         10,
         searchValue,
         attendanceStatusId,
-        date
+        date,
+        checkInStatusId
       );
 
       setStaffAttendance(result.data);
@@ -76,17 +80,22 @@ export default function AttendanceTable() {
 
   const handleSearch = async (searchValue: any) => {
     setPage(1);
-    loadData(1, searchValue, statusFilter, selectedDate);
+    loadData(1, searchValue, statusFilter, selectedDate, checkInStatusFilter);
   };
 
   const handleChangeDate = async (date: any) => {
     setPage(1);
-    loadData(1, search, statusFilter, date);
+    loadData(1, search, statusFilter, date, checkInStatusFilter);
   };
 
   const handleChangeAttendanceStatus = async (attendanceStatusId: any) => {
     setPage(1);
-    loadData(1, search, attendanceStatusId, selectedDate);
+    loadData(1, search, attendanceStatusId, selectedDate, checkInStatusFilter);
+  };
+
+  const handleChangeCheckInStatus = async (checkInStatusId: any) => {
+    setPage(1);
+    loadData(1, search, statusFilter, selectedDate, checkInStatusId);
   };
 
   return (
@@ -104,64 +113,89 @@ export default function AttendanceTable() {
           </div>
 
           {/* FILTERS */}
-          <div className="flex flex-col gap-3 lg:flex-row">
-            {/* SEARCH */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
+          <div className="">
+            <div className="mb-4">
+              {/* SEARCH */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
 
-              <input
-                type="text"
-                placeholder="Search staff..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                  if (e.target.value === "") {
-                    handleSearch(e.target.value);
-                  }
-                }}
-                className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
-              />
-              <Button className="absolute right-0 h-11" onClick={() => handleSearch(search)}>
-                Search
-              </Button>
+                <input
+                  type="text"
+                  placeholder="Search staff..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                    if (e.target.value === "") {
+                      handleSearch(e.target.value);
+                    }
+                  }}
+                  className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                />
+                <Button className="absolute right-0 h-11" onClick={() => handleSearch(search)}>
+                  Search
+                </Button>
+              </div>
             </div>
-            {/* DATE FILTER */}
-            <div className="relative">
-              <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
+            <div className="flex flex-col gap-3 lg:flex-row">
+              {/* DATE FILTER */}
+              <div className="relative">
+                <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
 
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  setPage(1);
-                  handleChangeDate(e.target.value);
-                }}
-                className="h-11 rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setPage(1);
+                    handleChangeDate(e.target.value);
+                  }}
+                  className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-4 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
 
-            {/* STATUS FILTER */}
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
+              {/* ATTENDANCE STATUS FILTER */}
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
 
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                  handleChangeAttendanceStatus(e.target.value);
-                }}
-                className="h-11 rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="">All Status</option>
-                <option value="1">Present</option>
-                <option value="2">Absent</option>
-              </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                    handleChangeAttendanceStatus(e.target.value);
+                  }}
+                  className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Attendance Status</option>
+                  <option value="1">Present</option>
+                  <option value="2">Absent</option>
+                </select>
+              </div>
+
+              {/* CHECK IN STATUS FILTER */}
+              <div className="relative">
+                <UserCheck className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
+
+                <select
+                  value={checkInStatusFilter}
+                  onChange={(e) => {
+                    setCheckInStatusFilterFilter(e.target.value);
+                    setPage(1);
+                    handleChangeCheckInStatus(e.target.value);
+                  }}
+                  className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="">Check In Status</option>
+                  <option value="1">On Time</option>
+                  <option value="2">Late</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
+
+
 
         {/* TABLE */}
         <div className="overflow-x-auto">
