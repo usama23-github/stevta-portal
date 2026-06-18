@@ -97,7 +97,7 @@ export const generateAttendanceService =
     endOfDay.setHours(23, 59, 59, 999);
 
     const checkInCutoff = new Date(startOfDay);
-    checkInCutoff.setHours(9, 1, 0, 0);
+    checkInCutoff.setHours(9, 31, 0, 0);
 
     const absentCutoff = new Date(startOfDay);
     absentCutoff.setHours(11, 0, 0, 0);
