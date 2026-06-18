@@ -61,3 +61,14 @@ export const getAllStaff = async ({ page, limit, search, sort }) => {
         },
     }
 };
+
+export const deleteAllStaffService =
+  async (confirm) => {
+    if (confirm !== "YES") {
+      throw new Error(
+        "Pass confirm=YES to delete all attendance"
+      );
+    }
+
+    return prisma.staff.deleteMany({});
+  };

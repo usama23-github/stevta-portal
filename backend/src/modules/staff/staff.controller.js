@@ -1,4 +1,4 @@
-import { getAllStaff } from "./staff.service.js";
+import { getAllStaff, deleteAllStaffService } from "./staff.service.js";
 
 export const allStaff = async (req, res, next) => {
     try {
@@ -13,4 +13,26 @@ export const allStaff = async (req, res, next) => {
         console.error(error);
         return res.status(500).json({ error: "Failed to fetch staff" });
     }
+};
+
+export const deleteAllStaff = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const result =
+      await deleteAllStaffService(
+        req.query.confirm
+      );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "All staff records deleted successfully",
+      deletedCount: result.count,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
