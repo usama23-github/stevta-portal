@@ -148,6 +148,11 @@ export const generateAttendanceService =
       const employeeLogs =
         logsByEmpNo.get(staff.empNo) || [];
 
+      // Skip employees with no logs
+      if (employeeLogs.length === 0 && new Date() < absentCutoff) {
+        continue;
+      }
+
       let attendanceStatusId =
         ATTENDANCE_STATUS.PRESENT;
 
