@@ -6,11 +6,6 @@ import {
 
 const router = express.Router();
 
-// Development only
-// if (process.env.NODE_ENV !== "production") {
-//   router.post("/register", controller.register);
-// }
-
 router.post("/", createPostingPlace);
 
 export default router;
