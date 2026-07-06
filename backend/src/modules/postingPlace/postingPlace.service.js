@@ -28,3 +28,16 @@ export const createPostingPlaceService = async ({ postingPlace, order }) => {
 
     return newPostingPlace;
 };
+
+export const getAllPostingPlaceService = async () => {
+    const postingPlaces =
+        await prisma.postingPlace.findMany({
+            orderBy: {
+                order: "asc",
+            },
+        });
+
+    return {
+        postingPlaces
+    }
+};

@@ -38,3 +38,9 @@ NODE_ENV=development npx prisma migrate dev
 
 Production
 NODE_ENV=production npx prisma migrate deploy
+
+HOSTINGER RUN COMMANDS
+git pull
+docker exec -it stevta-portal-backend-1 npx prisma migrate dev --name madepostingplaceunique
+docker exec -it stevta-portal-backend-1 npx prisma migrate deploy
+docker logs stevta-portal-backend-1
