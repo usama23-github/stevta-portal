@@ -8,6 +8,21 @@ datasource db {
 }
 
 // =========================
+// POSTING PLACES
+// =========================
+
+model PostingPlace {
+  id                   Int      @id
+
+  postingPlace         String
+  order                Int?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+}
+
+// =========================
 // REGION
 // =========================
 
