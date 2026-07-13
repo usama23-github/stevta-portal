@@ -87,3 +87,29 @@ export const importStaff = async (rows) => {
     staff: staff.length,
   };
 };
+
+export const importSection = async (rows) => {
+  const sectionMap = new Map();
+
+  for (const row of rows) {
+    // SECTION
+
+    sectionMap.set(row.section, {
+      section: row.section,
+      postingPlaceId: row.postingPlaceId
+    });
+  }
+
+  const section = [...sectionMap.values()];
+
+  // INSERT ORDER IMPORTANT
+
+  await prisma.section.createMany({
+    data: section,
+    skipDuplicates: true,
+  });
+
+  return {
+    section: section.length,
+  };
+};

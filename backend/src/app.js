@@ -6,7 +6,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 
 import routes from "./routes/index.js";
-import importRoutes from "./modules/imports/import.routes.js";
 
 const app = express();
 
@@ -23,7 +22,6 @@ app.use(
 );
 
 app.use("/api/v1", routes);
-app.use("/api/imports", importRoutes);
 
 app.get("/api", (req, res) => {
   res.send("STEVTA API Running");
