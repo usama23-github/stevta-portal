@@ -41,6 +41,7 @@ NODE_ENV=production npx prisma migrate deploy
 
 HOSTINGER RUN COMMANDS
 git pull
+docker compose -f docker-compose.prod.yml up -d --build
 docker exec -it stevta-portal-backend-1 npx prisma migrate dev --name madepostingplaceunique
 docker exec -it stevta-portal-backend-1 npx prisma migrate deploy
 docker logs stevta-portal-backend-1

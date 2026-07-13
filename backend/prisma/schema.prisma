@@ -20,6 +20,17 @@ model PostingPlace {
   updatedAt     DateTime @updatedAt
 }
 
+model Section {
+  id                     Int      @id @default(autoincrement())
+  section                String
+  postingPlaceId         Int
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  postingPlace PostingPlace @relation(fields: [postingPlaceId], references: [id])
+}
+
 // =========================
 // REGION
 // =========================
