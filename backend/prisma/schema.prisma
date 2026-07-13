@@ -16,21 +16,24 @@ model PostingPlace {
   postingPlace  String   @unique
   order         Int?
 
+  sections      Section[]
+  staff         Staff[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  sections   Section[]
 }
 
 model Section {
-  id                     Int      @id @default(autoincrement())
-  section                String
-  postingPlaceId         Int
+  id              Int      @id @default(autoincrement())
+  section         String
 
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  postingPlaceId  Int
+  postingPlace    PostingPlace @relation(fields: [postingPlaceId], references: [id])
 
-  postingPlace PostingPlace @relation(fields: [postingPlaceId], references: [id])
+  staff           Staff[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 // =========================
@@ -226,17 +229,27 @@ enum DesignationCategory {
 // =========================
 
 model Staff {
-  id            String   @id @default(uuid())
+  id              String   @id @default(uuid())
 
-  empNo         String   @unique
-  name          String
-  designation   String
-  department    String
+  empNo           String   @unique
+  name            String
 
-  attendances   Attendance[]
+  designation     String?
+  department      String?
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  postingPlaceId  Int?
+  sectionId       Int?
+
+  postingPlace    PostingPlace? @relation(fields: [postingPlaceId], references: [id])
+  section         Section?      @relation(fields: [sectionId], references: [id])
+
+  attendances     Attendance[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([postingPlaceId])
+  @@index([sectionId])
 }
 
 // =========================
