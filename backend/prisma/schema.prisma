@@ -18,6 +18,8 @@ model PostingPlace {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  sections   Section[]
 }
 
 model Section {
