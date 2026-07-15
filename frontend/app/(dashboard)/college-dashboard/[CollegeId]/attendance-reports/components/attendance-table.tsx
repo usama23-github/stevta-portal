@@ -38,7 +38,7 @@ export default function AttendanceTable() {
                         <tr className="border-b bg-slate-50">
                             {columns.map((column) => (
                                 <th
-                                    key={column.id ?? String(column.accessorKey)}
+                                    key={column.id}
                                     className="px-4 py-3 text-left text-sm font-semibold"
                                 >
                                     {String(column.header)}
