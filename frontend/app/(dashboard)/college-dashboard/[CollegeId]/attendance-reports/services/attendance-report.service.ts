@@ -1,5 +1,4 @@
-const API =
-    process.env.NEXT_PUBLIC_API_URL;
+const API = "https://portal.stevta.gos.pk/api/v1";
 
 export async function getAttendanceReport(
     params: URLSearchParams

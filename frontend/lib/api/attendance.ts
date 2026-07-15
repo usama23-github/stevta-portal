@@ -71,7 +71,7 @@ export async function getStaffAttendance(
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: "https://portal.stevta.gos.pk/api/v1",
     withCredentials: true,
 });
 
