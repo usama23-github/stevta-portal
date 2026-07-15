@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { SettingsIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 import {
   GoCheckCircle,
@@ -18,7 +17,8 @@ import {
   CalendarCheck,
   CalendarMinus,
   ArrowLeftRight,
-  ClipboardCheck
+  ClipboardCheck,
+  CalendarDays
 } from "lucide-react";
 
 const routes = [
@@ -45,6 +45,12 @@ const routes = [
     href: "/attendance",
     icon: CalendarCheck,
     activeIcon: CalendarCheck,
+  },
+  {
+    label: "Attendance Reports",
+    href: "/attendance-reports",
+    icon: CalendarDays,
+    activeIcon: CalendarDays,
   },
   {
     label: "Leaves",
