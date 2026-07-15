@@ -23,6 +23,6 @@ export const getAllPostingPlaces = async (req, res, next) => {
         });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ error: "Failed to fetch staff" });
+        return res.status(500).json({ error: "Failed to fetch posting places" });
     }
 };
