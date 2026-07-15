@@ -621,6 +621,11 @@ export const getAttendanceSummaryService = async (query) => {
 
   const notMarked = totalStaff - attendanceMarked;
 
+  const attendancePercentage =
+    totalStaff > 0
+      ? Number(((present / totalStaff) * 100).toFixed(2))
+      : 0;
+
   return {
     totalStaff,
     present,
@@ -628,5 +633,6 @@ export const getAttendanceSummaryService = async (query) => {
     late,
     earlyCheckout,
     notMarked,
+    attendancePercentage
   };
 };
