@@ -17,11 +17,16 @@ model PostingPlace {
   order         Int?
 
   sections      Section[]
+  designations  Designation[]
   staff         Staff[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+// =========================
+// SECTIONS
+// =========================
 
 model Section {
   id              Int      @id @default(autoincrement())
@@ -34,10 +39,13 @@ model Section {
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@unique([section, postingPlaceId])
+  @@index([postingPlaceId])
 }
 
 // =========================
-// REGION
+// REGIONS
 // =========================
 
 model Region {
@@ -49,12 +57,10 @@ model Region {
   updatedAt   DateTime @updatedAt
 
   districts   District[]
-  offices     Office[]
-  institutes  Institute[]
 }
 
 // =========================
-// DISTRICT
+// DISTRICTS
 // =========================
 
 model District {
@@ -71,11 +77,11 @@ model District {
 
   subdivisions  Subdivision[]
 
-  institutes Institute[]
+  @@index([regionId])
 }
 
 // =========================
-// SUBDIVISION
+// SUBDIVISIONS
 // =========================
 
 model Subdivision {
@@ -90,107 +96,7 @@ model Subdivision {
 
   district District @relation(fields: [districtId], references: [id])
 
-  institutes Institute[]
-}
-
-// =========================
-// OFFICE
-// =========================
-
-model Office {
-  id              String   @id @default(uuid())
-
-  code            String   @unique
-  name            String
-
-  officeType      OfficeType
-
-  regionId        Int?
-
-  parentOfficeId  String?
-
-  phone           String?
-  email           String?
-  address         String?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  region Region? @relation(fields: [regionId], references: [id])
-
-  parentOffice Office? @relation("OfficeHierarchy", fields: [parentOfficeId], references: [id])
-
-  childOffices Office[] @relation("OfficeHierarchy")
-
-  sections OfficeSection[]
-
-  users User[]
-
-  managedInstitutes Institute[] @relation("RegionalOfficeInstitutes")
-}
-
-// =========================
-// OFFICE TYPE
-// =========================
-
-enum OfficeType {
-  HQ
-  REGIONAL
-}
-
-// =========================
-// OFFICE SECTION
-// =========================
-
-model OfficeSection {
-  id            String   @id @default(uuid())
-
-  name          String
-
-  officeId      String
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  office Office @relation(fields: [officeId], references: [id])
-
-  designations Designation[]
-}
-
-// =========================
-// INSTITUTE
-// =========================
-
-model Institute {
-  id                String   @id @default(uuid())
-
-  code              String   @unique
-  name              String
-
-  regionId          Int
-  districtId        Int
-  subdivisionId     Int
-
-  rdOfficeId        String
-
-  principalName     String?
-
-  phone             String?
-  email             String?
-  address           String?
-
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  region Region @relation(fields: [regionId], references: [id])
-
-  district District @relation(fields: [districtId], references: [id])
-
-  subdivision Subdivision @relation(fields: [subdivisionId], references: [id])
-
-  rdOffice Office @relation("RegionalOfficeInstitutes", fields: [rdOfficeId], references: [id])
-
-  users User[]
+  @@index([districtId])
 }
 
 // =========================
@@ -198,30 +104,26 @@ model Institute {
 // =========================
 
 model Designation {
-  id            String   @id @default(uuid())
+  id              Int           @id @default(autoincrement())
 
-  name          String
+  designation     String
 
-  scale         String?
+  scaleId         Int
+  postingPlaceId  Int
 
-  category      DesignationCategory
+  scale           Scale         @relation(fields: [scaleId], references: [id])
+  postingPlace    PostingPlace  @relation(fields: [postingPlaceId], references: [id])
 
-  sectionId     String?
+  staff           Staff[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
-  section OfficeSection? @relation(fields: [sectionId], references: [id])
-}
+  @@index([scaleId])
+  @@index([postingPlaceId])
 
-// =========================
-// DESIGNATION CATEGORY
-// =========================
-
-enum DesignationCategory {
-  OFFICE
-  INSTITUTE
-  COMMON
+  // Prevent duplicate designation names within the same posting place and scale
+  @@unique([designation, postingPlaceId, scaleId])
 }
 
 // =========================
@@ -234,12 +136,13 @@ model Staff {
   empNo           String   @unique
   name            String
 
-  designation     String?
+  designationId   Int?
   department      String?
 
   postingPlaceId  Int?
   sectionId       Int?
 
+  designation     Designation? @relation(fields: [designationId], references: [id])
   postingPlace    PostingPlace? @relation(fields: [postingPlaceId], references: [id])
   section         Section?      @relation(fields: [sectionId], references: [id])
 
@@ -248,8 +151,23 @@ model Staff {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
+  @@index([designationId])
   @@index([postingPlaceId])
   @@index([sectionId])
+}
+
+// =========================
+// SCALE
+// =========================
+
+model Scale {
+  id            Int           @id @default(autoincrement())
+  scale         String        @unique
+
+  designations  Designation[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 // =========================
@@ -338,15 +256,8 @@ model User {
 
   isActive    Boolean  @default(true)
 
-  officeId      String?
-  instituteId   String?
-
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  office Office? @relation(fields: [officeId], references: [id])
-
-  institute Institute? @relation(fields: [instituteId], references: [id])
 
 }
 
