@@ -2,7 +2,7 @@ export interface StaffAttendance {
     empNo: string;
     employeeName: string;
     designation: string;
-    department: string;
+    section: string;
     date: string;
     attendanceStatus: number;
     checkIn: string;

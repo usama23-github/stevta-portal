@@ -210,7 +210,7 @@ export default function AttendanceTable() {
                   {[
                     "Staff Name",
                     "Designation",
-                    "Department",
+                    "Section",
                     "Date",
                     "Attendance",
                     "Check In Time",
@@ -256,9 +256,9 @@ export default function AttendanceTable() {
                       {record.designation}
                     </td>
 
-                    {/* DEPARTMENT */}
+                    {/* SECTION */}
                     <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
-                      {record.department}
+                      {record.section}
                     </td>
 
                     {/* DATE */}
