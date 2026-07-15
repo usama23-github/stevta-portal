@@ -1,4 +1,4 @@
-import { createScaleService, getAllScalesService } from "./postingPlace.service.js";
+import { createScaleService, getAllScalesService } from "./scale.service.js";
 
 export const createScale = async (req, res, next) => {
     try {
