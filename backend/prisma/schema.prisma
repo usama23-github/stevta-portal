@@ -151,9 +151,11 @@ model Staff {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  @@index([designationId])
   @@index([postingPlaceId])
   @@index([sectionId])
+  @@index([designationId])
+  @@index([empNo])
+  @@index([name])
 }
 
 // =========================
@@ -200,8 +202,11 @@ model Attendance {
 
   @@unique([empNo, attendanceDate])
 
-  @@index([empNo])
   @@index([attendanceDate])
+  @@index([empNo])
+  @@index([attendanceStatusId])
+  @@index([checkInStatusId])
+  @@index([attendanceDate, attendanceStatusId])
 }
 
 // =========================
@@ -220,6 +225,10 @@ model AttendanceLogs {
   updatedAt     DateTime @updatedAt
 
   @@unique([empNo, dateTime, deviceId])
+
+  @@index([empNo])
+  @@index([dateTime])
+  @@index([empNo, dateTime])
 
 }
 

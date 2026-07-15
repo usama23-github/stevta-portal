@@ -4,7 +4,8 @@ import {
     generateAttendanceService,
     getAttendanceLogsService,
     getStaffAttendanceService,
-    deleteAllAttendanceService
+    deleteAllAttendanceService,
+    getAttendanceSummaryService,
 } from "./attendance.service.js";
 
 export const createAttendance = async (req, res, next) => {
@@ -85,23 +86,61 @@ export const getStaffAttendance = async (
 };
 
 export const deleteAllAttendance = async (
-  req,
-  res,
-  next
+    req,
+    res,
+    next
 ) => {
-  try {
-    const result =
-      await deleteAllAttendanceService(
-        req.query.confirm
-      );
+    try {
+        const result =
+            await deleteAllAttendanceService(
+                req.query.confirm
+            );
 
-    return res.status(200).json({
-      success: true,
-      message:
-        "All attendance records deleted successfully",
-      deletedCount: result.count,
-    });
-  } catch (error) {
-    next(error);
-  }
+        return res.status(200).json({
+            success: true,
+            message:
+                "All attendance records deleted successfully",
+            deletedCount: result.count,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAttendanceReport = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result =
+            await getStaffAttendanceService(req.query);
+
+        return res.json({
+            success: true,
+            result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getAttendanceSummary = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result =
+            await getAttendanceSummaryService(
+                req.query
+            );
+
+        return res.json({
+            success: true,
+            result,
+        });
+    } catch (error) {
+        next(error);
+    }
 };

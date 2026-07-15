@@ -271,7 +271,6 @@ export const getAttendanceLogsService =
 export const getStaffAttendanceService = async (query) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
-
   const skip = (page - 1) * limit;
 
   const date = query.date ? new Date(query.date) : new Date();
@@ -281,6 +280,9 @@ export const getStaffAttendanceService = async (query) => {
 
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
+
+  const sortField = query.sortField || "attendanceDate";
+  const sortOrder = query.sortOrder === "asc" ? "asc" : "desc";
 
   const where = {
     attendanceDate: {
@@ -297,63 +299,92 @@ export const getStaffAttendanceService = async (query) => {
     where.checkInStatusId = Number(query.checkInStatusId);
   }
 
+  // Staff filters
+  where.staff = {};
+
+  if (query.postingPlaceId) {
+    where.staff.postingPlaceId = Number(query.postingPlaceId);
+  }
+
+  if (query.sectionId) {
+    where.staff.sectionId = Number(query.sectionId);
+  }
+
+  if (query.designationId) {
+    where.staff.designationId = Number(query.designationId);
+  }
+
+  // Search
   if (query.search) {
-    where.staff = {
-      OR: [
-        {
-          empNo: {
-            contains: query.search,
-            mode: "insensitive",
-          },
+    where.staff.OR = [
+      {
+        empNo: {
+          contains: query.search,
+          mode: "insensitive",
         },
-        {
-          name: {
-            contains: query.search,
-            mode: "insensitive",
-          },
+      },
+      {
+        name: {
+          contains: query.search,
+          mode: "insensitive",
         },
-        {
-          department: {
-            contains: query.search,
-            mode: "insensitive",
-          },
+      },
+      {
+        department: {
+          contains: query.search,
+          mode: "insensitive",
         },
-        {
-          designation: {
-            is: {
-              designation: {
-                contains: query.search,
-                mode: "insensitive",
-              },
+      },
+      {
+        designation: {
+          is: {
+            designation: {
+              contains: query.search,
+              mode: "insensitive",
             },
           },
         },
-        {
-          designation: {
-            is: {
-              scale: {
-                is: {
-                  scale: {
-                    contains: query.search,
-                    mode: "insensitive",
-                  },
+      },
+      {
+        designation: {
+          is: {
+            scale: {
+              is: {
+                scale: {
+                  contains: query.search,
+                  mode: "insensitive",
                 },
               },
             },
           },
         },
-        {
-          section: {
-            is: {
-              section: {
-                contains: query.search,
-                mode: "insensitive",
-              },
+      },
+      {
+        postingPlace: {
+          is: {
+            postingPlace: {
+              contains: query.search,
+              mode: "insensitive",
             },
           },
         },
-      ],
-    };
+      },
+      {
+        section: {
+          is: {
+            section: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
+        },
+      },
+    ];
+  }
+
+  // Remove empty staff filter
+  if (Object.keys(where.staff).length === 0) {
+    delete where.staff;
   }
 
   const [rows, total] = await prisma.$transaction([
@@ -378,15 +409,15 @@ export const getStaffAttendanceService = async (query) => {
               },
             },
 
-            section: {
-              select: {
-                section: true,
-              },
-            },
-
             postingPlace: {
               select: {
                 postingPlace: true,
+              },
+            },
+
+            section: {
+              select: {
+                section: true,
               },
             },
           },
@@ -397,7 +428,7 @@ export const getStaffAttendanceService = async (query) => {
       take: limit,
 
       orderBy: {
-        attendanceDate: "desc",
+        [sortField]: sortOrder,
       },
     }),
 
@@ -410,16 +441,17 @@ export const getStaffAttendanceService = async (query) => {
     let workingHours = null;
 
     if (row.checkInTime && row.checkOutTime) {
-      const diffMs = row.checkOutTime - row.checkInTime;
+      const diffMs = row.checkOutTime.getTime() - row.checkInTime.getTime();
 
       const hours = Math.floor(diffMs / (1000 * 60 * 60));
       const minutes = Math.floor(
         (diffMs % (1000 * 60 * 60)) / (1000 * 60)
       );
+      const seconds = Math.floor(
+        (diffMs % (1000 * 60)) / 1000
+      );
 
-      workingHours = `${hours}:${minutes
-        .toString()
-        .padStart(2, "0")}`;
+      workingHours = `${hours}h ${minutes}m ${seconds}s`;
     }
 
     return {
@@ -428,21 +460,28 @@ export const getStaffAttendanceService = async (query) => {
       employeeName: row.staff.name,
 
       designation: row.staff.designation
-        ? `${row.staff.designation.designation} ${row.staff.designation.scale.scale}`
+        ? `${row.staff.designation.designation} ${row.staff.designation.scale?.scale ?? ""
+          }`.trim()
         : null,
-
-      section: row.staff.section?.section ?? null,
 
       department: row.staff.department,
 
       postingPlace:
         row.staff.postingPlace?.postingPlace ?? null,
 
+      section:
+        row.staff.section?.section ?? null,
+
       date: dayjs(row.attendanceDate)
         .tz("Asia/Karachi")
         .format("YYYY-MM-DD"),
 
-      attendanceStatus: row.attendanceStatusId,
+      attendanceStatusId: row.attendanceStatusId,
+
+      attendanceStatus:
+        row.attendanceStatusId === 1
+          ? "Present"
+          : "Absent",
 
       checkIn: row.checkInTime
         ? dayjs(row.checkInTime)
@@ -450,7 +489,14 @@ export const getStaffAttendanceService = async (query) => {
           .format("hh:mm:ss A")
         : null,
 
-      checkInStatus: row.checkInStatusId,
+      checkInStatusId: row.checkInStatusId,
+
+      checkInStatus:
+        row.checkInStatusId === 1
+          ? "On Time"
+          : row.checkInStatusId === 2
+            ? "Late"
+            : null,
 
       checkOut: row.checkOutTime
         ? dayjs(row.checkOutTime)
@@ -458,7 +504,14 @@ export const getStaffAttendanceService = async (query) => {
           .format("hh:mm:ss A")
         : null,
 
-      checkOutStatus: row.checkOutStatusId,
+      checkOutStatusId: row.checkOutStatusId,
+
+      checkOutStatus:
+        row.checkOutStatusId === 1
+          ? "Normal"
+          : row.checkOutStatusId === 2
+            ? "Early"
+            : null,
 
       workingHours,
     };
@@ -472,6 +525,8 @@ export const getStaffAttendanceService = async (query) => {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+      sortField,
+      sortOrder,
     },
   };
 };
@@ -486,3 +541,71 @@ export const deleteAllAttendanceService =
 
     return prisma.attendance.deleteMany({});
   };
+
+export const getAttendanceSummaryService = async (query) => {
+  const date = query.date ? new Date(query.date) : new Date();
+
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const where = {
+    attendanceDate: {
+      gte: startOfDay,
+      lte: endOfDay,
+    },
+  };
+
+  const [
+    totalStaff,
+    present,
+    absent,
+    late,
+    earlyCheckout,
+  ] = await prisma.$transaction([
+    prisma.staff.count(),
+
+    prisma.attendance.count({
+      where: {
+        ...where,
+        attendanceStatusId: 1,
+      },
+    }),
+
+    prisma.attendance.count({
+      where: {
+        ...where,
+        attendanceStatusId: 2,
+      },
+    }),
+
+    prisma.attendance.count({
+      where: {
+        ...where,
+        checkInStatusId: 2,
+      },
+    }),
+
+    prisma.attendance.count({
+      where: {
+        ...where,
+        checkOutStatusId: 2,
+      },
+    }),
+  ]);
+
+  const attendanceMarked = present + absent;
+
+  const notMarked = totalStaff - attendanceMarked;
+
+  return {
+    totalStaff,
+    present,
+    absent,
+    late,
+    earlyCheckout,
+    notMarked,
+  };
+};
