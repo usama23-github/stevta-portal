@@ -2,24 +2,17 @@
 
 import { columns } from "./attendance-columns";
 import AttendanceStatusBadge from "./attendance-status-badge";
+import { AttendanceReport } from "@/types/attendance";
 
-const data = [
-    {
-        empNo: "104255",
-        employeeName: "Ali Khan",
-        designation: "Assistant (BPS-16)",
-        section: "HR",
-        postingPlace: "Head Office",
-        attendanceStatus: 1,
-        checkIn: "08:28:10 AM",
-        checkOut: "05:09:42 PM",
-        checkInStatus: 1,
-        checkOutStatus: 1,
-        workingHours: "8h 41m",
-    },
-];
+interface AttendanceTableProps {
+    data: AttendanceReport[];
+    loading?: boolean;
+}
 
-export default function AttendanceTable() {
+export default function AttendanceTable({
+    data,
+    loading = false,
+}: AttendanceTableProps) {
     return (
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
@@ -28,7 +21,7 @@ export default function AttendanceTable() {
                 </h2>
 
                 <span className="text-sm text-slate-500">
-                    {data.length} Record(s)
+                    {loading ? "Loading..." : `${data.length} Record(s)`}
                 </span>
             </div>
 
@@ -36,9 +29,9 @@ export default function AttendanceTable() {
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b bg-slate-50">
-                            {columns.map((column) => (
+                            {data?.length !== 0 && columns?.map((column) => (
                                 <th
-                                    key={column.id}
+                                    key={column?.id}
                                     className="px-4 py-3 text-left text-sm font-semibold"
                                 >
                                     {String(column.header)}
@@ -48,26 +41,69 @@ export default function AttendanceTable() {
                     </thead>
 
                     <tbody>
-                        {data.map((row) => (
-                            <tr
-                                key={row.empNo}
-                                className="border-b hover:bg-slate-50"
-                            >
-                                <td className="px-4 py-3">{row.empNo}</td>
-                                <td className="px-4 py-3">{row.employeeName}</td>
-                                <td className="px-4 py-3">{row.designation}</td>
-                                <td className="px-4 py-3">{row.section}</td>
-                                <td className="px-4 py-3">{row.postingPlace}</td>
-
-                                <td className="px-4 py-3">
-                                    <AttendanceStatusBadge status={row.attendanceStatus} />
+                        {loading ? (
+                            <tr>
+                                <td
+                                    colSpan={9}
+                                    className="py-10 text-center text-slate-500"
+                                >
+                                    Loading attendance...
                                 </td>
-
-                                <td className="px-4 py-3">{row.checkIn}</td>
-                                <td className="px-4 py-3">{row.checkOut}</td>
-                                <td className="px-4 py-3">{row.workingHours}</td>
                             </tr>
-                        ))}
+                        ) : data?.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={9}
+                                    className="py-10 text-center text-slate-500"
+                                >
+                                    No attendance found.
+                                </td>
+                            </tr>
+                        ) : (
+                            data?.map((row, index) => (
+                                <tr
+                                    key={`${row.empNo}-${row.date}`}
+                                    className="border-b hover:bg-slate-50"
+                                >
+                                    <td className="px-4 py-3">{index + 1}</td>
+                                    <td className="px-4 py-3">{row.empNo}</td>
+
+                                    <td className="px-4 py-3">
+                                        {row.employeeName}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {row.designation ?? "-"}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {row.section ?? "-"}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {row.date ?? "-"}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        <AttendanceStatusBadge
+                                            status={row.attendanceStatusId}
+                                        />
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {row.checkIn ?? "-"}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {row.checkOut ?? "-"}
+                                    </td>
+
+                                    <td className="px-4 py-3">
+                                        {row.workingHours ?? "-"}
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

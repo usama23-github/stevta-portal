@@ -35,6 +35,10 @@ export const getAllPostingPlaceService = async () => {
             orderBy: {
                 order: "asc",
             },
+            select: {
+                id: true,
+                postingPlace: true,
+            },
         });
 
     return {

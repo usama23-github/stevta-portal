@@ -1,4 +1,6 @@
 export interface AttendanceReport {
+  id: number;
+  
   empNo: string;
 
   employeeName: string;

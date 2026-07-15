@@ -7,6 +7,10 @@ import AttendanceStatusBadge from "./attendance-status-badge";
 
 export const columns: ColumnDef<AttendanceReport>[] = [
     {
+        accessorKey: "",
+        header: "S no",
+    },
+    {
         accessorKey: "empNo",
         header: "Emp No",
     },
@@ -23,8 +27,8 @@ export const columns: ColumnDef<AttendanceReport>[] = [
         header: "Section",
     },
     {
-        accessorKey: "postingPlace",
-        header: "Posting Place",
+        accessorKey: "date",
+        header: "Date",
     },
     {
         accessorKey: "attendanceStatus",

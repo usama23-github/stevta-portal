@@ -291,6 +291,27 @@ export const getStaffAttendanceService = async (query) => {
     },
   };
 
+  if (query.postingPlaceId) {
+    where.staff = {
+      ...where.staff,
+      postingPlaceId: Number(query.postingPlaceId),
+    };
+  }
+
+  if (query.sectionId) {
+    where.staff = {
+      ...where.staff,
+      sectionId: Number(query.sectionId),
+    };
+  }
+
+  if (query.designationId) {
+    where.staff = {
+      ...where.staff,
+      designationId: Number(query.designationId),
+    };
+  }
+
   if (query.attendanceStatusId) {
     where.attendanceStatusId = Number(query.attendanceStatusId);
   }

@@ -67,3 +67,31 @@ export async function getStaffAttendance(
 
     return result.result;
 }
+
+import axios from "axios";
+
+const API = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    withCredentials: true,
+});
+
+export const getAttendance = (params: any) =>
+    API.get("/attendance/report", { params });
+
+export const getAttendanceSummary = (params: any) =>
+    API.get("/attendance/report/summary", { params });
+
+export const getPostingPlaces = () =>
+    API.get("/postingplace");
+
+export const getSections = () =>
+    API.get("/sections");
+
+export const getDesignations = () =>
+    API.get("/designations");
+
+export const getAttendanceTrend = (params: any) =>
+    API.get("/attendance/report/trend", { params });
+
+export const getSectionAttendance = (params: any) =>
+    API.get("/attendance/report/section", { params });
