@@ -64,28 +64,37 @@ export const importStaff = async (rows) => {
   const staffMap = new Map();
 
   for (const row of rows) {
-    // STAFF
-
     staffMap.set(row.emp_no, {
       empNo: row.emp_no,
       name: row.employee_name,
-      designationId: row.designationId,
-      postingPlaceId: row.postingPlaceId,
-      sectionId: row.sectionId
+      designationId: row.designationId || null,
+      postingPlaceId: row.postingPlaceId || null,
+      sectionId: row.sectionId || null,
     });
   }
 
   const staff = [...staffMap.values()];
 
-  // INSERT ORDER IMPORTANT
-
-  await prisma.staff.createMany({
-    data: staff,
-    skipDuplicates: true,
-  });
+  await prisma.$transaction(
+    staff.map((item) =>
+      prisma.staff.upsert({
+        where: {
+          empNo: item.empNo,
+        },
+        create: item,
+        update: {
+          name: item.name,
+          designationId: item.designationId,
+          postingPlaceId: item.postingPlaceId,
+          sectionId: item.sectionId,
+        },
+      })
+    )
+  );
 
   return {
-    staff: staff.length,
+    total: staff.length,
+    message: "Staff imported successfully.",
   };
 };
 
