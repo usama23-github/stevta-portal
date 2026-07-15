@@ -269,18 +269,18 @@ export default function AttendanceTable() {
                     {/* ATTENDANCE */}
                     <td className="border-b border-[#f1f5f9] px-6 py-4">
                       <div
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${record.attendanceStatus === 1
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${record.attendanceStatusId === 1
                           ? "bg-green-100 text-green-700"
                           : "bg-red-100 text-red-700"
                           }`}
                       >
-                        {record.attendanceStatus === 1 ? (
+                        {record.attendanceStatusId === 1 ? (
                           <CheckCircle2 className="h-4 w-4" />
                         ) : (
                           <XCircle className="h-4 w-4" />
                         )}
 
-                        {record.attendanceStatus === 1 ? "Present" : "Absent"}
+                        {record.attendanceStatusId === 1 ? "Present" : "Absent"}
                       </div>
                     </td>
 

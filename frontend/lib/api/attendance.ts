@@ -4,7 +4,7 @@ export interface StaffAttendance {
     designation: string;
     section: string;
     date: string;
-    attendanceStatus: number;
+    attendanceStatusId: number;
     checkIn: string;
     checkInStatus: number;
     checkOut: string;
