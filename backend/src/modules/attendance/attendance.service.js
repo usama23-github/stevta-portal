@@ -342,6 +342,16 @@ export const getStaffAttendanceService = async (query) => {
             },
           },
         },
+        {
+          section: {
+            is: {
+              section: {
+                contains: query.search,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
       ],
     };
   }
@@ -360,12 +370,23 @@ export const getStaffAttendanceService = async (query) => {
             designation: {
               select: {
                 designation: true,
-
                 scale: {
                   select: {
                     scale: true,
                   },
                 },
+              },
+            },
+
+            section: {
+              select: {
+                section: true,
+              },
+            },
+
+            postingPlace: {
+              select: {
+                postingPlace: true,
               },
             },
           },
@@ -410,7 +431,12 @@ export const getStaffAttendanceService = async (query) => {
         ? `${row.staff.designation.designation} ${row.staff.designation.scale.scale}`
         : null,
 
+      section: row.staff.section?.section ?? null,
+
       department: row.staff.department,
+
+      postingPlace:
+        row.staff.postingPlace?.postingPlace ?? null,
 
       date: dayjs(row.attendanceDate)
         .tz("Asia/Karachi")
@@ -419,23 +445,17 @@ export const getStaffAttendanceService = async (query) => {
       attendanceStatus: row.attendanceStatusId,
 
       checkIn: row.checkInTime
-        ? row.checkInTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        })
+        ? dayjs(row.checkInTime)
+          .tz("Asia/Karachi")
+          .format("hh:mm:ss A")
         : null,
 
       checkInStatus: row.checkInStatusId,
 
       checkOut: row.checkOutTime
-        ? row.checkOutTime.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: true,
-        })
+        ? dayjs(row.checkOutTime)
+          .tz("Asia/Karachi")
+          .format("hh:mm:ss A")
         : null,
 
       checkOutStatus: row.checkOutStatusId,
