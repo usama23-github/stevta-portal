@@ -121,6 +121,7 @@ export const importDesignation = async (rows) => {
     // DESIGNATION
 
     designationMap.set(row.designation, {
+      designation: row.designation,
       scaleId: row.scaleId,
       postingPlaceId: row.postingPlaceId
     });
