@@ -69,8 +69,9 @@ export const importStaff = async (rows) => {
     staffMap.set(row.emp_no, {
       empNo: row.emp_no,
       name: row.employee_name,
-      designation: row.designation,
-      department: row.department
+      designationId: row.designationId,
+      postingPlaceId: row.postingPlaceId,
+      sectionId: row.sectionId
     });
   }
 
