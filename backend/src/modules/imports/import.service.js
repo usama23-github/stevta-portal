@@ -113,3 +113,27 @@ export const importSection = async (rows) => {
     section: section.length,
   };
 };
+
+export const importDesignation = async (rows) => {
+  const designationMap = new Map();
+
+  for (const row of rows) {
+    // DESIGNATION
+
+    designationMap.set(row.designation, {
+      scaleId: row.scaleId,
+      postingPlaceId: row.postingPlaceId
+    });
+  }
+
+  const designation = [...designationMap.values()];
+
+  await prisma.designation.createMany({
+    data: designation,
+    skipDuplicates: true,
+  });
+
+  return {
+    designation: designation.length,
+  };
+};

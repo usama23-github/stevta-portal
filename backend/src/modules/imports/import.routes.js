@@ -5,7 +5,8 @@ import upload from "../../middlewares/upload.middleware.js";
 import {
   importHierarchyFile,
   importStaffFile,
-  importSectionFile
+  importSectionFile,
+  importDesignationFile
 } from "./import.controller.js";
 
 const router = express.Router();
@@ -25,7 +26,13 @@ router.post(
 router.post(
   "/section",
   upload.single("file"),
-    importSectionFile
+  importSectionFile
+);
+
+router.post(
+  "/designation",
+  upload.single("file"),
+  importDesignationFile
 );
 
 export default router;
