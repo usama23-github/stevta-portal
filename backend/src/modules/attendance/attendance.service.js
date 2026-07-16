@@ -636,3 +636,94 @@ export const getAttendanceSummaryService = async (query) => {
     attendancePercentage
   };
 };
+
+export const getSectionAttendanceSummaryService = async (query) => {
+  const date = query.date ? new Date(query.date) : new Date();
+
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const sections = await prisma.section.findMany({
+    orderBy: {
+      section: "asc",
+    },
+    include: {
+      staff: {
+        include: {
+          attendances: {
+            where: {
+              attendanceDate: {
+                gte: startOfDay,
+                lte: endOfDay,
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const result = sections.map((section) => {
+    const totalStaff = section.staff.length;
+
+    let present = 0;
+    let absent = 0;
+    let late = 0;
+    let earlyCheckout = 0;
+    let notMarked = 0;
+
+    section.staff.forEach((staff) => {
+      const attendance = staff.attendances[0];
+
+      if (!attendance) {
+        notMarked++;
+        return;
+      }
+
+      if (attendance.attendanceStatusId === 1) {
+        present++;
+      }
+
+      if (attendance.attendanceStatusId === 2) {
+        absent++;
+      }
+
+      if (attendance.checkInStatusId === 2) {
+        late++;
+      }
+
+      if (attendance.checkOutStatusId === 2) {
+        earlyCheckout++;
+      }
+    });
+
+    const attendancePercentage =
+      totalStaff > 0
+        ? Number(((present / totalStaff) * 100).toFixed(2))
+        : 0;
+
+    return {
+      sectionId: section.id,
+      section: section.section,
+
+      totalStaff,
+
+      present,
+
+      absent,
+
+      late,
+
+      earlyCheckout,
+
+      notMarked,
+
+      attendancePercentage,
+    };
+  });
+
+  return result;
+};

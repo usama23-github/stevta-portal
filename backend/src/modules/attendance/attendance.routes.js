@@ -7,6 +7,7 @@ import {
     deleteAllAttendance,
     getAttendanceReport,
     getAttendanceSummary,
+    getSectionAttendanceSummary
 } from './attendance.controller.js';
 
 const router = express.Router();
@@ -15,6 +16,7 @@ router.post('/save', createAttendance);
 router.post("/generate", generateAttendance);
 router.get("/logs", getAttendanceLogs);
 router.delete("/all", deleteAllAttendance);
+router.get("/report/section-summary", getSectionAttendanceSummary);
 router.get("/report", getAttendanceReport);
 router.get("/summary", getAttendanceSummary);
 router.get("/", getStaffAttendance);

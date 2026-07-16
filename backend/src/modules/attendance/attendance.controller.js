@@ -6,6 +6,7 @@ import {
     getStaffAttendanceService,
     deleteAllAttendanceService,
     getAttendanceSummaryService,
+    getSectionAttendanceSummaryService
 } from "./attendance.service.js";
 
 export const createAttendance = async (req, res, next) => {
@@ -137,6 +138,24 @@ export const getAttendanceSummary = async (
             );
 
         return res.json({
+            success: true,
+            result,
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getSectionAttendanceSummary = async (
+    req,
+    res,
+    next
+) => {
+    try {
+        const result =
+            await getSectionAttendanceSummaryService(req.query);
+
+        res.status(200).json({
             success: true,
             result,
         });
