@@ -9,6 +9,8 @@ import ReportFilters from "./components/report-filters";
 import SummaryCards from "./components/summary-cards";
 // import ReportCharts from "./components/report-charts";
 import AttendanceTable from "./components/attendance-table";
+import { attendanceColumns } from "./columns/attendance-columns";
+import { sectionSummaryColumns } from "./columns/section-summary-columns";
 
 import { useAttendance } from "@/hooks/useAttendance";
 
@@ -24,6 +26,7 @@ export default function AttendanceReportsPage() {
         rows,
         loading,
         summary,
+        summarySection,
         meta,
         refresh,
     } = useAttendance(query);
@@ -47,14 +50,23 @@ export default function AttendanceReportsPage() {
                         loading={loading}
                     />
 
+                    <AttendanceTable
+                        title="Section Wise Summary"
+                        data={summarySection}
+                        columns={sectionSummaryColumns}
+                        loading={loading}
+                    />
+
+                    <AttendanceTable
+                        title="Daily Attendance"
+                        data={rows}
+                        columns={attendanceColumns}
+                        loading={loading}
+                    />
+
                     {/* <ReportCharts
                         summary={summary}
                     /> */}
-
-                    <AttendanceTable
-                        data={rows}
-                        loading={loading}
-                    />
 
                 </div>
             </div>

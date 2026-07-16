@@ -1,24 +1,30 @@
 "use client";
 
-import { columns } from "./attendance-columns";
-import AttendanceStatusBadge from "./attendance-status-badge";
-import { AttendanceReport } from "@/types/attendance";
+import React from "react";
 
-interface AttendanceTableProps {
-    data: AttendanceReport[];
+export interface TableColumn<T> {
+    id: string;
+    header: string;
+    cell: (row: T, index: number) => React.ReactNode;
+}
+
+interface AttendanceTableProps<T> {
+    title?: string;
+    data: T[];
+    columns: TableColumn<T>[];
     loading?: boolean;
 }
 
-export default function AttendanceTable({
+export default function AttendanceTable<T>({
+    title = "Attendance Report",
     data,
+    columns,
     loading = false,
-}: AttendanceTableProps) {
+}: AttendanceTableProps<T>) {
     return (
         <div className="rounded-2xl border bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                    Attendance Report
-                </h2>
+                <h2 className="text-lg font-semibold">{title}</h2>
 
                 <span className="text-sm text-slate-500">
                     {loading ? "Loading..." : `${data.length} Record(s)`}
@@ -29,12 +35,12 @@ export default function AttendanceTable({
                 <table className="w-full border-collapse">
                     <thead>
                         <tr className="border-b bg-slate-50">
-                            {data?.length !== 0 && columns?.map((column) => (
+                            {columns.map((column) => (
                                 <th
-                                    key={column?.id}
+                                    key={column.id}
                                     className="px-4 py-3 text-left text-sm font-semibold"
                                 >
-                                    {String(column.header)}
+                                    {column.header}
                                 </th>
                             ))}
                         </tr>
@@ -44,63 +50,35 @@ export default function AttendanceTable({
                         {loading ? (
                             <tr>
                                 <td
-                                    colSpan={9}
-                                    className="py-10 text-center text-slate-500"
+                                    colSpan={columns.length}
+                                    className="py-10 text-center"
                                 >
-                                    Loading attendance...
+                                    Loading...
                                 </td>
                             </tr>
-                        ) : data?.length === 0 ? (
+                        ) : data.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={9}
-                                    className="py-10 text-center text-slate-500"
+                                    colSpan={columns.length}
+                                    className="py-10 text-center"
                                 >
-                                    No attendance found.
+                                    No Records Found
                                 </td>
                             </tr>
                         ) : (
-                            data?.map((row, index) => (
+                            data.map((row, index) => (
                                 <tr
-                                    key={`${row.empNo}-${row.date}`}
+                                    key={index}
                                     className="border-b hover:bg-slate-50"
                                 >
-                                    <td className="px-4 py-3">{index + 1}</td>
-                                    <td className="px-4 py-3">{row.empNo}</td>
-
-                                    <td className="px-4 py-3">
-                                        {row.employeeName}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        {row.designation ?? "-"}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        {row.section ?? "-"}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        {row.date ?? "-"}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        <AttendanceStatusBadge
-                                            status={row.attendanceStatusId}
-                                        />
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        {row.checkIn ?? "-"}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        {row.checkOut ?? "-"}
-                                    </td>
-
-                                    <td className="px-4 py-3">
-                                        {row.workingHours ?? "-"}
-                                    </td>
+                                    {columns.map((column) => (
+                                        <td
+                                            key={column.id}
+                                            className="px-4 py-3"
+                                        >
+                                            {column.cell(row, index)}
+                                        </td>
+                                    ))}
                                 </tr>
                             ))
                         )}

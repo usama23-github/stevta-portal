@@ -45,3 +45,15 @@ export interface AttendanceSummary {
 
     notMarked: number;
 }
+
+export interface AttendanceSectionSummary {
+    sectionId: number | null;
+    section: string | null;
+    totalStaff: number | null;
+    present: number | null;
+    absent: number | null;
+    late: number | null;
+    earlyCheckout: number | null;
+    notMarked: number | null;
+    attendancePercentage: number | null;
+}
