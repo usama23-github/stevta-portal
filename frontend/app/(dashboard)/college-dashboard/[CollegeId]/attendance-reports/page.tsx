@@ -19,7 +19,8 @@ export default function AttendanceReportsPage() {
     const [query, setQuery] = useState({
         page: 1,
         limit: 1000,
-        date: dayjs().format("YYYY-MM-DD"),
+        fromDate: dayjs().format("YYYY-MM-DD"),
+        toDate: dayjs().format("YYYY-MM-DD"),
         search: "",
         postingPlace: "",
         section: "",

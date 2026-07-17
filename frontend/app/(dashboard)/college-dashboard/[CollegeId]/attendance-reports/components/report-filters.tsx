@@ -40,7 +40,8 @@ export default function ReportFilters({
     setQuery,
     refresh,
 }: ReportFiltersProps) {
-    const [date, setDate] = useState<Date>();
+    const [dateFrom, setDateFrom] = useState<Date>();
+    const [dateTo, setDateTo] = useState<Date>();
 
     const {
         postingPlaces,
@@ -49,10 +50,20 @@ export default function ReportFilters({
     } = useReportFilters();
 
     useEffect(() => {
-        if (query.date) {
-            setDate(new Date(query.date));
+        if (query.fromDate) {
+            setDateFrom(new Date(query.fromDate));
+        } else {
+            setDateFrom(undefined);
         }
-    }, [query.date]);
+    }, [query.fromDate]);
+
+    useEffect(() => {
+        if (query.toDate) {
+            setDateTo(new Date(query.toDate));
+        } else {
+            setDateTo(undefined);
+        }
+    }, [query.toDate]);
 
     return (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -67,7 +78,7 @@ export default function ReportFilters({
             <div className="grid gap-5 lg:grid-cols-12">
                 {/* Search */}
 
-                <div className="lg:col-span-6">
+                <div className="lg:col-span-4">
                     <label className="mb-2 block text-sm font-medium">
                         Search Staff
                     </label>
@@ -90,11 +101,11 @@ export default function ReportFilters({
                     </div>
                 </div>
 
-                {/* Date */}
+                {/* Date From */}
 
-                <div className="lg:col-span-6">
+                <div className="lg:col-span-4">
                     <label className="mb-2 block text-sm font-medium">
-                        Date
+                        Date From
                     </label>
 
                     <Popover>
@@ -105,7 +116,7 @@ export default function ReportFilters({
                             >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
 
-                                {date ? format(date, "PPP") : "Select Date"}
+                                {dateFrom ? format(dateFrom, "PPP") : "Select Date"}
                             </Button>
                         </PopoverTrigger>
 
@@ -115,16 +126,60 @@ export default function ReportFilters({
                         >
                             <Calendar
                                 mode="single"
-                                selected={date}
+                                selected={dateFrom}
                                 onSelect={(selected) => {
-                                    setDate(selected);
+                                    setDateFrom(selected);
 
                                     setQuery((prev: any) => ({
                                         ...prev,
                                         page: 1,
-                                        date: selected
+                                        fromDate: selected
                                             ? format(selected, "yyyy-MM-dd")
-                                            : "",
+                                            : undefined,
+                                        date: undefined,
+                                    }));
+                                }}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
+
+                {/* Date To */}
+
+                <div className="lg:col-span-4">
+                    <label className="mb-2 block text-sm font-medium">
+                        Date To
+                    </label>
+
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                variant="outline"
+                                className="h-11 w-full justify-start font-normal"
+                            >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+
+                                {dateTo ? format(dateTo, "PPP") : "Select Date"}
+                            </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent
+                            className="w-auto p-0"
+                            align="start"
+                        >
+                            <Calendar
+                                mode="single"
+                                selected={dateTo}
+                                onSelect={(selected) => {
+                                    setDateTo(selected);
+
+                                    setQuery((prev: any) => ({
+                                        ...prev,
+                                        page: 1,
+                                        toDate: selected
+                                            ? format(selected, "yyyy-MM-dd")
+                                            : undefined,
+                                        date: undefined,
                                     }));
                                 }}
                             />
@@ -319,18 +374,21 @@ export default function ReportFilters({
                     variant="outline"
                     className="h-11"
                     onClick={() => {
-                        setDate(undefined);
+                        setDateFrom(undefined);
+                        setDateTo(undefined);
 
                         setQuery({
                             page: 1,
-                            limit: 10,
-                            date: new Date()
-                                .toISOString()
-                                .split("T")[0],
+                            limit: 1000,
+                            date: new Date().toISOString().split("T")[0],
+                            fromDate: undefined,
+                            toDate: undefined,
                             search: "",
                             postingPlaceId: undefined,
                             sectionId: undefined,
+                            designationId: undefined,
                             attendanceStatusId: undefined,
+                            checkInStatusId: undefined,
                         });
                     }}
                 >

@@ -17,7 +17,7 @@ interface Props {
     summary: AttendanceSummary;
 
     query: {
-        date: string;
+        fromDate: string;
         postingPlace?: string;
         section?: string;
     };
@@ -85,7 +85,7 @@ export default function ReportHeader({
                         exportAttendancePdf({
                             rows,
                             summary,
-                            date: query.date,
+                            date: query.fromDate,
                             postingPlace:
                                 query.postingPlace ?? "All Posting Places",
                             section:
