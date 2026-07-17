@@ -38,12 +38,10 @@ export const getAttendanceReport = async (
 };
 
 export const getAttendanceSummary = async (
-    date?: string
+    params: AttendanceQuery
 ) => {
     const response = await api.get("/attendance/summary", {
-        params: {
-            date,
-        },
+        params,
     });
 
     return response.data.result;

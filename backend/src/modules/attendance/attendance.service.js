@@ -572,12 +572,33 @@ export const getAttendanceSummaryService = async (query) => {
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
 
+  // Attendance filters
   const where = {
     attendanceDate: {
       gte: startOfDay,
       lte: endOfDay,
     },
   };
+
+  // Staff filters
+  const staffWhere = {};
+
+  if (query.postingPlaceId) {
+    staffWhere.postingPlaceId = Number(query.postingPlaceId);
+  }
+
+  if (query.sectionId) {
+    staffWhere.sectionId = Number(query.sectionId);
+  }
+
+  if (query.designationId) {
+    staffWhere.designationId = Number(query.designationId);
+  }
+
+  // Apply relation filter only if any staff filter exists
+  if (Object.keys(staffWhere).length > 0) {
+    where.staff = staffWhere;
+  }
 
   const [
     totalStaff,
@@ -586,7 +607,10 @@ export const getAttendanceSummaryService = async (query) => {
     late,
     earlyCheckout,
   ] = await prisma.$transaction([
-    prisma.staff.count(),
+
+    prisma.staff.count({
+      where: staffWhere,
+    }),
 
     prisma.attendance.count({
       where: {
@@ -618,7 +642,6 @@ export const getAttendanceSummaryService = async (query) => {
   ]);
 
   const attendanceMarked = present + absent;
-
   const notMarked = totalStaff - attendanceMarked;
 
   const attendancePercentage =
@@ -633,7 +656,7 @@ export const getAttendanceSummaryService = async (query) => {
     late,
     earlyCheckout,
     notMarked,
-    attendancePercentage
+    attendancePercentage,
   };
 };
 

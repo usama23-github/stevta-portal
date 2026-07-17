@@ -44,6 +44,8 @@ export interface AttendanceSummary {
     earlyCheckout: number;
 
     notMarked: number;
+
+    attendancePercentage: number;
 }
 
 export interface AttendanceSectionSummary {

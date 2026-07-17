@@ -37,7 +37,7 @@ export function useAttendance(query: AttendanceQuery) {
             const [report, stats, sectionSummary] = await Promise.all([
                 getAttendanceReport(query),
 
-                getAttendanceSummary(query.date),
+                getAttendanceSummary(query),
 
                 getAttendanceSectionSummary(query.date),
             ]);

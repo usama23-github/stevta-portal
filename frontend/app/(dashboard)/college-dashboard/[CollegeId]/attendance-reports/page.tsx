@@ -15,11 +15,14 @@ import { sectionSummaryColumns } from "./columns/section-summary-columns";
 import { useAttendance } from "@/hooks/useAttendance";
 
 export default function AttendanceReportsPage() {
+
     const [query, setQuery] = useState({
         page: 1,
         limit: 1000,
         date: dayjs().format("YYYY-MM-DD"),
         search: "",
+        postingPlace: "",
+        section: "",
     });
 
     const {
@@ -33,7 +36,13 @@ export default function AttendanceReportsPage() {
 
     return (
         <div className="space-y-6 p-6">
-            <ReportHeader />
+            {summary && (
+                <ReportHeader
+                    rows={rows}
+                    summary={summary}
+                    query={query}
+                />
+            )}
 
             <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                 <ReportTabs />
