@@ -579,9 +579,9 @@ export const deleteAllAttendanceService =
   };
 
 export const getAttendanceSummaryService = async (query) => {
-  // Attendance filters
   const where = {};
 
+  // Date filter
   if (query.date) {
     const start = new Date(query.date);
     start.setHours(0, 0, 0, 0);
@@ -608,7 +608,6 @@ export const getAttendanceSummaryService = async (query) => {
       where.attendanceDate.lte = to;
     }
 
-    // Default to today
     if (!query.fromDate && !query.toDate) {
       const today = new Date();
 
@@ -644,63 +643,86 @@ export const getAttendanceSummaryService = async (query) => {
     where.staff = staffWhere;
   }
 
-  const [
-    totalStaff,
-    present,
-    absent,
-    late,
-    earlyCheckout,
-  ] = await prisma.$transaction([
-    prisma.staff.count({
-      where: staffWhere,
-    }),
+  const totalStaff = await prisma.staff.count({
+    where: staffWhere,
+  });
 
-    prisma.attendance.count({
-      where: {
-        ...where,
-        attendanceStatusId: 1,
-      },
-    }),
+  const records = await prisma.attendance.findMany({
+    where,
+    select: {
+      attendanceDate: true,
+      attendanceStatusId: true,
+      checkInStatusId: true,
+      checkOutStatusId: true,
+    },
+    orderBy: {
+      attendanceDate: "asc",
+    },
+  });
 
-    prisma.attendance.count({
-      where: {
-        ...where,
-        attendanceStatusId: 2,
-      },
-    }),
+  const summaryMap = {};
 
-    prisma.attendance.count({
-      where: {
-        ...where,
-        checkInStatusId: 2,
-      },
-    }),
+  for (const row of records) {
+    const date = dayjs(row.attendanceDate).format("YYYY-MM-DD");
 
-    prisma.attendance.count({
-      where: {
-        ...where,
-        checkOutStatusId: 2,
-      },
-    }),
-  ]);
+    if (!summaryMap[date]) {
+      summaryMap[date] = {
+        date,
+        totalStaff,
+        present: 0,
+        absent: 0,
+        late: 0,
+        earlyCheckout: 0,
+      };
+    }
 
-  const attendanceMarked = present + absent;
-  const notMarked = totalStaff - attendanceMarked;
+    if (row.attendanceStatusId === 1) {
+      summaryMap[date].present++;
+    }
 
-  const attendancePercentage =
-    totalStaff > 0
-      ? Number(((present / totalStaff) * 100).toFixed(2))
-      : 0;
+    if (row.attendanceStatusId === 2) {
+      summaryMap[date].absent++;
+    }
 
-  return {
-    totalStaff,
-    present,
-    absent,
-    late,
-    earlyCheckout,
-    notMarked,
-    attendancePercentage,
-  };
+    if (row.checkInStatusId === 2) {
+      summaryMap[date].late++;
+    }
+
+    if (row.checkOutStatusId === 2) {
+      summaryMap[date].earlyCheckout++;
+    }
+  }
+
+  const summary = Object.values(summaryMap).map((item) => {
+    const attendanceMarked = item.present + item.absent;
+
+    return {
+      ...item,
+      notMarked: item.totalStaff - attendanceMarked,
+      attendancePercentage:
+        item.totalStaff > 0
+          ? Number(((item.present / item.totalStaff) * 100).toFixed(2))
+          : 0,
+    };
+  });
+
+  // Return single object for daily report
+  if (query.date) {
+    return (
+      summary[0] || {
+        totalStaff,
+        present: 0,
+        absent: 0,
+        late: 0,
+        earlyCheckout: 0,
+        notMarked: totalStaff,
+        attendancePercentage: 0,
+      }
+    );
+  }
+
+  // Return array for date range report
+  return summary;
 };
 
 export const getSectionAttendanceSummaryService = async (query) => {
