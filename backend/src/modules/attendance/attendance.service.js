@@ -579,21 +579,51 @@ export const deleteAllAttendanceService =
   };
 
 export const getAttendanceSummaryService = async (query) => {
-  const date = query.date ? new Date(query.date) : new Date();
-
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
-
   // Attendance filters
-  const where = {
-    attendanceDate: {
-      gte: startOfDay,
-      lte: endOfDay,
-    },
-  };
+  const where = {};
+
+  if (query.date) {
+    const start = new Date(query.date);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(query.date);
+    end.setHours(23, 59, 59, 999);
+
+    where.attendanceDate = {
+      gte: start,
+      lte: end,
+    };
+  } else {
+    where.attendanceDate = {};
+
+    if (query.fromDate) {
+      const from = new Date(query.fromDate);
+      from.setHours(0, 0, 0, 0);
+      where.attendanceDate.gte = from;
+    }
+
+    if (query.toDate) {
+      const to = new Date(query.toDate);
+      to.setHours(23, 59, 59, 999);
+      where.attendanceDate.lte = to;
+    }
+
+    // Default to today
+    if (!query.fromDate && !query.toDate) {
+      const today = new Date();
+
+      const start = new Date(today);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(today);
+      end.setHours(23, 59, 59, 999);
+
+      where.attendanceDate = {
+        gte: start,
+        lte: end,
+      };
+    }
+  }
 
   // Staff filters
   const staffWhere = {};
@@ -610,7 +640,6 @@ export const getAttendanceSummaryService = async (query) => {
     staffWhere.designationId = Number(query.designationId);
   }
 
-  // Apply relation filter only if any staff filter exists
   if (Object.keys(staffWhere).length > 0) {
     where.staff = staffWhere;
   }
@@ -622,7 +651,6 @@ export const getAttendanceSummaryService = async (query) => {
     late,
     earlyCheckout,
   ] = await prisma.$transaction([
-
     prisma.staff.count({
       where: staffWhere,
     }),
