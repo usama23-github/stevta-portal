@@ -274,7 +274,7 @@ export const getStaffAttendanceService = async (query) => {
   const skip = (page - 1) * limit;
 
   const sortField = query.sortField || "attendanceDate";
-  const sortOrder = query.sortOrder === "asc" ? "asc" : "desc";
+  const sortOrder = query.sortOrder === "desc" ? "desc" : "asc";
 
   const where = {};
 
