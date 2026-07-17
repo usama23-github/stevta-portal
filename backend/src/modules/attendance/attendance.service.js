@@ -273,51 +273,53 @@ export const getStaffAttendanceService = async (query) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const date = query.date ? new Date(query.date) : new Date();
-
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
-
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
-
   const sortField = query.sortField || "attendanceDate";
   const sortOrder = query.sortOrder === "asc" ? "asc" : "desc";
 
-  const where = {
-    attendanceDate: {
-      gte: startOfDay,
-      lte: endOfDay,
-    },
-  };
+  const where = {};
 
-  if (query.postingPlaceId) {
-    where.staff = {
-      ...where.staff,
-      postingPlaceId: Number(query.postingPlaceId),
+  // Date filter
+  if (query.date) {
+    const start = new Date(query.date);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(query.date);
+    end.setHours(23, 59, 59, 999);
+
+    where.attendanceDate = {
+      gte: start,
+      lte: end,
     };
-  }
+  } else {
+    where.attendanceDate = {};
 
-  if (query.sectionId) {
-    where.staff = {
-      ...where.staff,
-      sectionId: Number(query.sectionId),
-    };
-  }
+    if (query.fromDate) {
+      const from = new Date(query.fromDate);
+      from.setHours(0, 0, 0, 0);
+      where.attendanceDate.gte = from;
+    }
 
-  if (query.designationId) {
-    where.staff = {
-      ...where.staff,
-      designationId: Number(query.designationId),
-    };
-  }
+    if (query.toDate) {
+      const to = new Date(query.toDate);
+      to.setHours(23, 59, 59, 999);
+      where.attendanceDate.lte = to;
+    }
 
-  if (query.attendanceStatusId) {
-    where.attendanceStatusId = Number(query.attendanceStatusId);
-  }
+    // Default to today when no date filters are provided
+    if (!query.fromDate && !query.toDate) {
+      const today = new Date();
 
-  if (query.checkInStatusId) {
-    where.checkInStatusId = Number(query.checkInStatusId);
+      const start = new Date(today);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(today);
+      end.setHours(23, 59, 59, 999);
+
+      where.attendanceDate = {
+        gte: start,
+        lte: end,
+      };
+    }
   }
 
   // Staff filters
@@ -333,6 +335,19 @@ export const getStaffAttendanceService = async (query) => {
 
   if (query.designationId) {
     where.staff.designationId = Number(query.designationId);
+  }
+
+  // Attendance filters
+  if (query.attendanceStatusId) {
+    where.attendanceStatusId = Number(query.attendanceStatusId);
+  }
+
+  if (query.checkInStatusId) {
+    where.checkInStatusId = Number(query.checkInStatusId);
+  }
+
+  if (query.checkOutStatusId) {
+    where.checkOutStatusId = Number(query.checkOutStatusId);
   }
 
   // Search
