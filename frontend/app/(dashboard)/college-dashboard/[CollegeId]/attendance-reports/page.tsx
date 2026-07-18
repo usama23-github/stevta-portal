@@ -55,7 +55,7 @@ export default function AttendanceReportsPage() {
                         setQuery={setQuery}
                     />
 
-                    {summary?.length === 1 ? (
+                    {summary?.length < 2 ? (
                         <SummaryCards
                             summary={summary}
                             loading={loading}
