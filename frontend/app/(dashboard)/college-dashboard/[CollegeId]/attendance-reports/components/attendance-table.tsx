@@ -6,6 +6,7 @@ export interface TableColumn<T> {
     id: string;
     header: string;
     cell: (row: T, index: number) => React.ReactNode;
+    textColor?: string;
 }
 
 interface AttendanceTableProps<T> {
@@ -34,7 +35,7 @@ export default function AttendanceTable<T>({
             <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                     <thead>
-                        <tr className="border-b bg-slate-50">
+                        <tr className="border-b bg-sky-900 text-white">
                             {columns.map((column) => (
                                 <th
                                     key={column.id}
@@ -74,7 +75,7 @@ export default function AttendanceTable<T>({
                                     {columns.map((column) => (
                                         <td
                                             key={column.id}
-                                            className="px-4 py-3"
+                                            className={`px-4 py-3 font-medium ${column?.textColor}`}
                                         >
                                             {column.cell(row, index)}
                                         </td>

@@ -40,6 +40,7 @@ export default function ReportFilters({
     setQuery,
     refresh,
 }: ReportFiltersProps) {
+
     const [dateFrom, setDateFrom] = useState<Date>();
     const [dateTo, setDateTo] = useState<Date>();
 
@@ -199,15 +200,19 @@ export default function ReportFilters({
 
                     <Select
                         value={String(query.postingPlaceId ?? "all")}
-                        onValueChange={(value) =>
+                        onValueChange={(value) => {
+                            const selected = (postingPlaces as any[]).find(
+                                (item) => item.id === Number(value)
+                            );
+
                             setQuery((prev: any) => ({
                                 ...prev,
                                 page: 1,
-                                postingPlaceId:
-                                    value === "all"
-                                        ? undefined
-                                        : Number(value),
-                            }))
+                                postingPlaceId: value === "all" ? undefined : Number(value),
+                                postingPlace: value === "all" ? "All Posting Places" : selected?.postingPlace ?? "",
+                            }));
+                        }
+
                         }
                     >
                         <SelectTrigger className="h-11">
@@ -244,16 +249,18 @@ export default function ReportFilters({
 
                     <Select
                         value={String(query.sectionId ?? "all")}
-                        onValueChange={(value) =>
+                        onValueChange={(value) => {
+                            const selected = (sections as any[]).find(
+                                (item) => item.id === Number(value)
+                            );
+
                             setQuery((prev: any) => ({
                                 ...prev,
                                 page: 1,
-                                sectionId:
-                                    value === "all"
-                                        ? undefined
-                                        : Number(value),
-                            }))
-                        }
+                                sectionId: value === "all" ? undefined : Number(value),
+                                section: value === "all" ? "All Sections" : selected?.section ?? "",
+                            }));
+                        }}
                     >
                         <SelectTrigger className="h-11">
                             <SelectValue placeholder="All Sections" />

@@ -10,64 +10,89 @@ import {
 } from "lucide-react";
 
 import SummaryCard from "./summary-card";
-
-interface Summary {
-    totalStaff: number;
-    present: number;
-    absent: number;
-    late: number;
-    earlyCheckout: number;
-    attendancePercentage?: number;
-}
+import { AttendanceSummary } from "@/types/attendance";
 
 interface SummaryCardsProps {
-    summary?: Summary;
+    summary?: AttendanceSummary[];
     loading?: boolean;
 }
 
 export default function SummaryCards({
-    summary,
+    summary = [],
     loading,
 }: SummaryCardsProps) {
+
+    const totals = summary.reduce(
+        (acc, item) => {
+            acc.totalStaff = Math.max(acc.totalStaff, item.totalStaff);
+            acc.present += item.present;
+            acc.absent += item.absent;
+            acc.late += item.late;
+            acc.earlyCheckout += item.earlyCheckout;
+            acc.notMarked += item.notMarked;
+
+            return acc;
+        },
+        {
+            totalStaff: 0,
+            present: 0,
+            absent: 0,
+            late: 0,
+            earlyCheckout: 0,
+            notMarked: 0,
+        }
+    );
+
+    const attendancePercentage =
+        totals.totalStaff > 0 && summary.length > 0
+            ? Number(
+                (
+                    (totals.present /
+                        (totals.totalStaff * summary.length)) *
+                    100
+                ).toFixed(2)
+            )
+            : 0;
+
     const cards = [
         {
             title: "Total Staff",
-            value: summary?.totalStaff ?? 0,
+            value: totals.totalStaff,
             icon: Users,
             iconBg: "bg-blue-100",
             iconColor: "text-blue-600",
         },
         {
             title: "Present",
-            value: summary?.present ?? 0,
+            value: totals.present,
             icon: UserCheck,
             iconBg: "bg-green-100",
             iconColor: "text-green-600",
         },
         {
             title: "Absent",
-            value: summary?.absent ?? 0,
+            value: totals.absent,
             icon: UserX,
             iconBg: "bg-red-100",
             iconColor: "text-red-600",
         },
         {
             title: "Late",
-            value: summary?.late ?? 0,
+            value: totals.late,
             icon: Clock3,
             iconBg: "bg-amber-100",
             iconColor: "text-amber-600",
         },
         {
             title: "Early Out",
-            value: summary?.earlyCheckout ?? 0,
+            value: totals.earlyCheckout,
             icon: LogOut,
             iconBg: "bg-sky-100",
             iconColor: "text-sky-600",
         },
         {
             title: "Attendance %",
-            value: `${summary?.attendancePercentage ?? 0}%`,
+            value: `${attendancePercentage}%`,
             icon: TrendingUp,
             iconBg: "bg-purple-100",
             iconColor: "text-purple-600",

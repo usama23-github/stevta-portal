@@ -10,7 +10,7 @@ import SummaryCards from "./components/summary-cards";
 // import ReportCharts from "./components/report-charts";
 import AttendanceTable from "./components/attendance-table";
 import { attendanceColumns } from "./columns/attendance-columns";
-import { sectionSummaryColumns } from "./columns/section-summary-columns";
+import { sectionSummaryColumns, summaryColumns } from "./columns/section-summary-columns";
 
 import { useAttendance } from "@/hooks/useAttendance";
 
@@ -22,8 +22,8 @@ export default function AttendanceReportsPage() {
         fromDate: dayjs().format("YYYY-MM-DD"),
         toDate: dayjs().format("YYYY-MM-DD"),
         search: "",
-        postingPlace: "",
-        section: "",
+        postingPlace: "All Posting Places",
+        section: "All Sections",
     });
 
     const {
@@ -55,10 +55,21 @@ export default function AttendanceReportsPage() {
                         setQuery={setQuery}
                     />
 
-                    <SummaryCards
-                        summary={summary}
-                        loading={loading}
-                    />
+                    {summary?.length === 1 ? (
+                        <SummaryCards
+                            summary={summary}
+                            loading={loading}
+                        />
+                    ) : (
+                        <AttendanceTable
+                            title="Attendance Summary"
+                            data={summary}
+                            columns={summaryColumns}
+                            loading={loading}
+                        />
+                    )}
+
+
 
                     <AttendanceTable
                         title="Section Wise Summary"

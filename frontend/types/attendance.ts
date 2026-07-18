@@ -33,6 +33,8 @@ export interface AttendanceReport {
 }
 
 export interface AttendanceSummary {
+    date: string;
+
     totalStaff: number;
 
     present: number;

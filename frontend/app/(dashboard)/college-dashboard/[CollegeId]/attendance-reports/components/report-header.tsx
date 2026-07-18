@@ -14,10 +14,11 @@ import {
 interface Props {
     rows: AttendanceReport[];
 
-    summary: AttendanceSummary;
+    summary: AttendanceSummary[];
 
     query: {
         fromDate: string;
+        toDate: string;
         postingPlace?: string;
         section?: string;
     };
@@ -85,7 +86,8 @@ export default function ReportHeader({
                         exportAttendancePdf({
                             rows,
                             summary,
-                            date: query.fromDate,
+                            fromDate: query.fromDate,
+                            toDate: query.toDate,
                             postingPlace:
                                 query.postingPlace ?? "All Posting Places",
                             section:

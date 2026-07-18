@@ -43,7 +43,7 @@ export default function ReportTabs() {
 
     return (
         <div className="border-b bg-slate-50 px-6">
-            <div className="flex overflow-x-auto scrollbar-hide">
+            {/* <div className="flex overflow-x-auto scrollbar-hide">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
 
@@ -69,7 +69,7 @@ export default function ReportTabs() {
                         </button>
                     );
                 })}
-            </div>
+            </div> */}
         </div>
     );
 }

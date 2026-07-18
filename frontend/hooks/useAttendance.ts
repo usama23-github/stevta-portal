@@ -21,7 +21,7 @@ export function useAttendance(query: AttendanceQuery) {
     const [rows, setRows] = useState<AttendanceReport[]>([]);
 
     const [summary, setSummary] =
-        useState<AttendanceSummary>();
+        useState<AttendanceSummary[]>([]);
 
     const [summarySection, setSummarySection] =
         useState<AttendanceSectionSummary[]>([]);
@@ -41,8 +41,6 @@ export function useAttendance(query: AttendanceQuery) {
 
                 getAttendanceSectionSummary(query.date),
             ]);
-
-            console.log(sectionSummary);
 
             setRows(report.data);
 
