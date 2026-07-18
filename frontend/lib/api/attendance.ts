@@ -82,13 +82,13 @@ export const getAttendanceSummary = (params: any) =>
     API.get("/attendance/report/summary", { params });
 
 export const getPostingPlaces = () =>
-    API.get("/postingplace");
+    API.get("/postingplace?page=1&limit=100");
 
 export const getSections = () =>
-    API.get("/sections");
+    API.get("/sections?page=1&limit=100");
 
 export const getDesignations = () =>
-    API.get("/designations");
+    API.get("/designations?page=1&limit=100");
 
 export const getAttendanceTrend = (params: any) =>
     API.get("/attendance/report/trend", { params });
