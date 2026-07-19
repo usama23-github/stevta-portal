@@ -148,7 +148,10 @@ export function exportAttendancePdf({
     const reportingDays = summary.length;
 
     const totalEmployees =
-        summary.length > 0 ? summary[0].totalStaff : 0;
+        summary.length > 0
+            ? Math.max(...summary.map(item => item.totalStaff))
+            : 0;
+
 
     const totalRecords = rows.length;
 
