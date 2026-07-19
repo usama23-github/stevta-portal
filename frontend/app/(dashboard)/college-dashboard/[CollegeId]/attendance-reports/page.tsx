@@ -79,7 +79,7 @@ export default function AttendanceReportsPage() {
                     />
 
                     <AttendanceTable
-                        title="Daily Attendance"
+                        title="Attendance Details"
                         data={rows}
                         columns={attendanceColumns}
                         loading={loading}
