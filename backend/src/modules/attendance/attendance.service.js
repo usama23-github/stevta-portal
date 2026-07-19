@@ -845,11 +845,9 @@ export const getSectionAttendanceSummaryService = async (query) => {
           id: Number(query.sectionId),
         }
         : undefined,
-
       orderBy: {
         section: "asc",
       },
-
       select: {
         id: true,
         section: true,
@@ -858,7 +856,6 @@ export const getSectionAttendanceSummaryService = async (query) => {
 
     prisma.staff.findMany({
       where: staffWhere,
-
       select: {
         sectionId: true,
         createdAt: true,
@@ -874,7 +871,6 @@ export const getSectionAttendanceSummaryService = async (query) => {
           }
           : {}),
       },
-
       include: {
         staff: {
           select: {
@@ -882,77 +878,92 @@ export const getSectionAttendanceSummaryService = async (query) => {
           },
         },
       },
+      orderBy: {
+        attendanceDate: "asc",
+      },
     }),
   ]);
 
   // ==========================================
-  // Report Date
+  // Group Attendance By Date
   // ==========================================
 
-  const reportEnd = dayjs(
-    query.date || query.toDate || new Date()
-  )
-    .endOf("day")
-    .valueOf();
+  const attendanceByDate = attendances.reduce((acc, attendance) => {
+    const date = dayjs(attendance.attendanceDate).format("YYYY-MM-DD");
+
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+
+    acc[date].push(attendance);
+
+    return acc;
+  }, {});
 
   // ==========================================
-  // Calculate Section Summary
+  // Generate Date-wise Section Summary
   // ==========================================
 
-  const result = sections.map((section) => {
-    const totalStaff = staffs.filter(
-      (staff) =>
-        staff.sectionId === section.id &&
-        new Date(staff.createdAt).getTime() <= reportEnd
-    ).length;
+  const result = Object.entries(attendanceByDate).map(
+    ([date, dayAttendances]) => {
+      const reportEnd = dayjs(date).endOf("day").valueOf();
 
-    let present = 0;
-    let absent = 0;
-    let late = 0;
-    let earlyCheckout = 0;
+      const sectionsSummary = sections.map((section) => {
+        const totalStaff = staffs.filter(
+          (staff) =>
+            staff.sectionId === section.id &&
+            new Date(staff.createdAt).getTime() <= reportEnd
+        ).length;
 
-    attendances.forEach((attendance) => {
-      if (attendance.staff.sectionId !== section.id) return;
+        const sectionAttendances = dayAttendances.filter(
+          (attendance) => attendance.staff.sectionId === section.id
+        );
 
-      if (attendance.attendanceStatusId === 1) {
-        present++;
-      } else if (attendance.attendanceStatusId === 2) {
-        absent++;
-      }
+        let present = 0;
+        let absent = 0;
+        let late = 0;
+        let earlyCheckout = 0;
 
-      if (attendance.checkInStatusId === 2) {
-        late++;
-      }
+        sectionAttendances.forEach((attendance) => {
+          if (attendance.attendanceStatusId === 1) {
+            present++;
+          } else if (attendance.attendanceStatusId === 2) {
+            absent++;
+          }
 
-      if (attendance.checkOutStatusId === 2) {
-        earlyCheckout++;
-      }
-    });
+          if (attendance.checkInStatusId === 2) {
+            late++;
+          }
 
-    const attendanceMarked = present + absent;
+          if (attendance.checkOutStatusId === 2) {
+            earlyCheckout++;
+          }
+        });
 
-    return {
-      sectionId: section.id,
-      section: section.section,
+        const attendanceMarked = present + absent;
 
-      totalStaff,
+        return {
+          sectionId: section.id,
+          section: section.section,
+          totalStaff,
+          present,
+          absent,
+          late,
+          earlyCheckout,
+          notMarked: Math.max(totalStaff - attendanceMarked, 0),
+          attendancePercentage:
+            totalStaff > 0
+              ? Number(((present / totalStaff) * 100).toFixed(2))
+              : 0,
+        };
+      });
 
-      present,
-
-      absent,
-
-      late,
-
-      earlyCheckout,
-
-      notMarked: Math.max(totalStaff - attendanceMarked, 0),
-
-      attendancePercentage:
-        totalStaff > 0
-          ? Number(((present / totalStaff) * 100).toFixed(2))
-          : 0,
-    };
-  });
+      return {
+        date,
+        sections: sectionsSummary,
+      };
+    }
+  );
 
   return result;
 };
