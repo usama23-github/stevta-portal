@@ -51,6 +51,7 @@ export interface AttendanceSummary {
 }
 
 export interface AttendanceSectionSummary {
+    date: string |  null;
     sectionId: number | null;
     section: string | null;
     totalStaff: number | null;

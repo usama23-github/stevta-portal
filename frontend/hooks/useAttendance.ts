@@ -39,7 +39,7 @@ export function useAttendance(query: AttendanceQuery) {
 
                 getAttendanceSummary(query),
 
-                getAttendanceSectionSummary(query.date),
+                getAttendanceSectionSummary(query),
             ]);
 
             setRows(report.data);
@@ -48,7 +48,15 @@ export function useAttendance(query: AttendanceQuery) {
 
             setSummary(stats);
 
-            setSummarySection(sectionSummary);
+            const singleArray = sectionSummary.flatMap(
+                (item: { date: string; sections: any[] }) =>
+                    item.sections.map((section: any) => ({
+                        date: item.date,
+                        ...section,
+                    }))
+            );
+
+            setSummarySection(singleArray);
         } finally {
             setLoading(false);
         }

@@ -8,6 +8,11 @@ export const sectionSummaryColumns: TableColumn<AttendanceSectionSummary>[] = [
         cell: (_, index) => index + 1,
     },
     {
+        id: "date",
+        header: "Date",
+        cell: (row) => row.date,
+    },
+    {
         id: "section",
         header: "Section",
         cell: (row) => row.section ?? "No Section",
