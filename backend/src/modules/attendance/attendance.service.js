@@ -78,47 +78,6 @@ export const createAttendanceLog = async (payload) => {
   }
 };
 
-export const createAttendanceLog = async (payload) => {
-  const {
-    empNo,
-    inOutStatus,
-    dateTime,
-    deviceId,
-  } = payload;
-
-  const parsedDate = dayjs.tz(dateTime, "Asia/Karachi").toDate();
-
-  try {
-    const attendanceLog = await prisma.attendanceLogs.create({
-      data: {
-        empNo,
-        inOutStatus,
-        dateTime: new Date(parsedDate),
-        deviceId,
-      },
-    });
-
-    return {
-      success: true,
-      data: attendanceLog,
-    };
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return {
-        success: false,
-        message: "Attendance log already exists.",
-      };
-    }
-
-    throw error;
-  }
-
-  return attendanceLog;
-};
-
 const ATTENDANCE_STATUS = {
   PRESENT: 1,
   ABSENT: 2,
