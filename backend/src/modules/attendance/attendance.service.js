@@ -68,7 +68,7 @@ export const createAttendanceLog = async (payload) => {
     });
   } catch (error) {
     if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error instanceof prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
       throw new Error("Attendance log already exists.");
