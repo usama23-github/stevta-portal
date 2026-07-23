@@ -57,14 +57,64 @@ export const createAttendanceLog = async (payload) => {
 
   const parsedDate = dayjs.tz(dateTime, "Asia/Karachi").toDate();
 
-  const attendanceLog = await prisma.attendanceLogs.create({
-    data: {
-      empNo,
-      inOutStatus,
-      dateTime: new Date(parsedDate),
-      deviceId,
-    },
-  });
+  try {
+    return await prisma.attendanceLogs.create({
+      data: {
+        empNo,
+        inOutStatus,
+        dateTime: new Date(parsedDate),
+        deviceId,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      throw new Error("Attendance log already exists.");
+    }
+
+    throw error;
+  }
+};
+
+export const createAttendanceLog = async (payload) => {
+  const {
+    empNo,
+    inOutStatus,
+    dateTime,
+    deviceId,
+  } = payload;
+
+  const parsedDate = dayjs.tz(dateTime, "Asia/Karachi").toDate();
+
+  try {
+    const attendanceLog = await prisma.attendanceLogs.create({
+      data: {
+        empNo,
+        inOutStatus,
+        dateTime: new Date(parsedDate),
+        deviceId,
+      },
+    });
+
+    return {
+      success: true,
+      data: attendanceLog,
+    };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        success: false,
+        message: "Attendance log already exists.",
+      };
+    }
+
+    throw error;
+  }
 
   return attendanceLog;
 };

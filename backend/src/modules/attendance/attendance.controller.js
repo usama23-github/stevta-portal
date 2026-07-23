@@ -12,7 +12,6 @@ import {
 export const createAttendance = async (req, res, next) => {
     try {
         const attendance = await saveAttendance(req.body);
-
         const log = await createAttendanceLog(req.body);
 
         return res.status(201).json({
@@ -21,7 +20,10 @@ export const createAttendance = async (req, res, next) => {
             log,
         });
     } catch (error) {
-        next(error);
+        return res.status(409).json({
+            success: false,
+            message: error.message,
+        });
     }
 };
 
