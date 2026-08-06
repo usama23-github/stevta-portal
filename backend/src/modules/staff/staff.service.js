@@ -34,7 +34,7 @@ export const getAllStaff = async ({
             {
                 designation: {
                     is: {
-                        name: {
+                        designation: {
                             contains: search,
                             mode: "insensitive",
                         },
@@ -44,7 +44,7 @@ export const getAllStaff = async ({
             {
                 postingPlace: {
                     is: {
-                        name: {
+                        postingPlace: {
                             contains: search,
                             mode: "insensitive",
                         },
@@ -54,7 +54,7 @@ export const getAllStaff = async ({
             {
                 section: {
                     is: {
-                        name: {
+                        section: {
                             contains: search,
                             mode: "insensitive",
                         },
