@@ -8,35 +8,29 @@ export const getAllStaff = async ({ page, limit, search, sort }) => {
 
     const skip = (page - 1) * limit;
 
-    const where = search
-        ? {
-            OR: [
-                {
-                    empNo: {
-                        contains: search,
-                    },
-                },
-                {
-                    name: {
-                        contains: search,
-                        mode: "insensitive",
-                    },
-                },
-                {
-                    designation: {
-                        contains: search,
-                        mode: "insensitive",
-                    },
-                },
-                {
-                    department: {
-                        contains: search,
-                        mode: "insensitive",
-                    },
-                },
-            ],
-        }
-        : {};
+    const where = {};
+
+    if (search) {
+        where.OR = [
+            { empNo: { contains: search } },
+            { name: { contains: search, mode: "insensitive" } },
+            { designation: { is: { name: { contains: search, mode: "insensitive" } } } },
+            { postingPlace: { is: { name: { contains: search, mode: "insensitive" } } } },
+            { section: { is: { name: { contains: search, mode: "insensitive" } } } },
+        ];
+    }
+
+    if (designationId) {
+        where.designationId = Number(designationId);
+    }
+
+    if (postingPlaceId) {
+        where.postingPlaceId = Number(postingPlaceId);
+    }
+
+    if (sectionId) {
+        where.sectionId = Number(sectionId);
+    }
 
     const [data, total] = await Promise.all([
         prisma.staff.findMany({
