@@ -11,9 +11,8 @@ export const getAllStaff = async ({
     postingPlaceId,
     sectionId,
 }) => {
-    page = parseInt(page);
-    limit = parseInt(limit);
-
+    page = Number(page);
+    limit = Number(limit);
     const skip = (page - 1) * limit;
 
     const where = {};
@@ -64,19 +63,19 @@ export const getAllStaff = async ({
         ];
     }
 
-    if (designationId != null) {
+    if (designationId) {
         where.designationId = Number(designationId);
     }
 
-    if (postingPlaceId != null) {
+    if (postingPlaceId) {
         where.postingPlaceId = Number(postingPlaceId);
     }
 
-    if (sectionId != null) {
+    if (sectionId) {
         where.sectionId = Number(sectionId);
     }
 
-    const [data, total] = await Promise.all([
+    const [rows, total] = await Promise.all([
         prisma.staff.findMany({
             where,
             skip,
@@ -107,8 +106,34 @@ export const getAllStaff = async ({
                 },
             },
         }),
-        prisma.staff.count({ where }),
+
+        prisma.staff.count({
+            where,
+        }),
     ]);
+
+    const data = rows.map((staff) => ({
+        id: staff.id,
+
+        empNo: staff.empNo,
+
+        employeeName: staff.name,
+
+        designation: staff.designation
+            ? `${staff.designation.designation} ${staff.designation.scale?.scale ?? ""
+                }`.trim()
+            : null,
+
+        department: staff.department,
+
+        postingPlace: staff.postingPlace?.postingPlace ?? null,
+
+        section: staff.section?.section ?? null,
+
+        createdAt: staff.createdAt,
+
+        updatedAt: staff.updatedAt,
+    }));
 
     return {
         data,
@@ -118,7 +143,7 @@ export const getAllStaff = async ({
             limit,
             totalPages: Math.ceil(total / limit),
         },
-    }
+    };
 };
 
 export const deleteAllStaffService =
