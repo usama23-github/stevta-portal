@@ -88,19 +88,19 @@ export const getAllStaff = async ({
                 designation: {
                     select: {
                         id: true,
-                        name: true,
+                        designation: true,
                     },
                 },
                 postingPlace: {
                     select: {
                         id: true,
-                        name: true,
+                        postingPlace: true,
                     },
                 },
                 section: {
                     select: {
                         id: true,
-                        name: true,
+                        section: true,
                     },
                 },
             },
