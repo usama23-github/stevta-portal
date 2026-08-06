@@ -18,8 +18,6 @@ export const getAllStaff = async ({
 
     const where = {};
 
-    const where = {};
-
     if (search) {
         where.OR = [
             {
