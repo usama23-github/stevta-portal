@@ -44,10 +44,29 @@ export const getAllStaff = async ({ page, limit, search, sort }) => {
             skip,
             take: limit,
             orderBy: {
-                empNo: sort === "asc" ? "asc" : "desc",
+                empNo: sort === "desc" ? "desc" : "asc",
+            },
+            include: {
+                designation: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                postingPlace: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+                section: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
             },
         }),
-
         prisma.staff.count({ where }),
     ]);
 
@@ -63,12 +82,12 @@ export const getAllStaff = async ({ page, limit, search, sort }) => {
 };
 
 export const deleteAllStaffService =
-  async (confirm) => {
-    if (confirm !== "YES") {
-      throw new Error(
-        "Pass confirm=YES to delete all attendance"
-      );
-    }
+    async (confirm) => {
+        if (confirm !== "YES") {
+            throw new Error(
+                "Pass confirm=YES to delete all attendance"
+            );
+        }
 
-    return prisma.staff.deleteMany({});
-  };
+        return prisma.staff.deleteMany({});
+    };
