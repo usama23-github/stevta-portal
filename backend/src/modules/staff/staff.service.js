@@ -87,19 +87,21 @@ export const getAllStaff = async ({
             include: {
                 designation: {
                     select: {
-                        id: true,
                         designation: true,
+                        scale: {
+                            select: {
+                                scale: true,
+                            },
+                        },
                     },
                 },
                 postingPlace: {
                     select: {
-                        id: true,
                         postingPlace: true,
                     },
                 },
                 section: {
                     select: {
-                        id: true,
                         section: true,
                     },
                 },
