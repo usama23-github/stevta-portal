@@ -2,7 +2,15 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export const getAllStaff = async ({ page, limit, search, sort }) => {
+export const getAllStaff = async ({
+    page = 1,
+    limit = 10,
+    search = "",
+    sort = "asc",
+    designationId,
+    postingPlaceId,
+    sectionId,
+}) => {
     page = parseInt(page);
     limit = parseInt(limit);
 
@@ -10,25 +18,63 @@ export const getAllStaff = async ({ page, limit, search, sort }) => {
 
     const where = {};
 
+    const where = {};
+
     if (search) {
         where.OR = [
-            { empNo: { contains: search } },
-            { name: { contains: search, mode: "insensitive" } },
-            { designation: { is: { name: { contains: search, mode: "insensitive" } } } },
-            { postingPlace: { is: { name: { contains: search, mode: "insensitive" } } } },
-            { section: { is: { name: { contains: search, mode: "insensitive" } } } },
+            {
+                empNo: {
+                    contains: search,
+                },
+            },
+            {
+                name: {
+                    contains: search,
+                    mode: "insensitive",
+                },
+            },
+            {
+                designation: {
+                    is: {
+                        name: {
+                            contains: search,
+                            mode: "insensitive",
+                        },
+                    },
+                },
+            },
+            {
+                postingPlace: {
+                    is: {
+                        name: {
+                            contains: search,
+                            mode: "insensitive",
+                        },
+                    },
+                },
+            },
+            {
+                section: {
+                    is: {
+                        name: {
+                            contains: search,
+                            mode: "insensitive",
+                        },
+                    },
+                },
+            },
         ];
     }
 
-    if (designationId) {
+    if (designationId != null) {
         where.designationId = Number(designationId);
     }
 
-    if (postingPlaceId) {
+    if (postingPlaceId != null) {
         where.postingPlaceId = Number(postingPlaceId);
     }
 
-    if (sectionId) {
+    if (sectionId != null) {
         where.sectionId = Number(sectionId);
     }
 
