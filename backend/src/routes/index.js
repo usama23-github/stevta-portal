@@ -8,6 +8,7 @@ import scaleRoutes from "../modules/scale/scale.routes.js";
 import importRoutes from "../modules/imports/import.routes.js";
 import sectionRoutes from "../modules/section/section.routes.js";
 import designationRoutes from "../modules/designation/designation.routes.js";
+import dashboardRoutes from "../modules/dashboard/dashboard.routes.js";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use("/postingPlace", postingPlaceRoutes);
 router.use("/scale", scaleRoutes);
 router.use("/sections", sectionRoutes);
 router.use("/designations", designationRoutes);
+router.use("/dashboard", dashboardRoutes);
 router.use("/imports", importRoutes);
 
 export default router;
