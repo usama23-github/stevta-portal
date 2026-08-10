@@ -346,7 +346,7 @@ export const CollegeIdClient = () => {
 
       const apiUrl =
         process.env.NEXT_PUBLIC_API_URL ||
-        "http://localhost:5000";
+        "https://portal.stevta.gos.pk/api/v1";
 
       const response = await fetch(
         `${apiUrl}/dashboard`,
