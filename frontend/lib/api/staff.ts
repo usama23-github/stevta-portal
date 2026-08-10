@@ -1,9 +1,11 @@
 export interface Staff {
     id: string;
     empNo: string;
-    name: string;
+    employeeName: string;
     designation: string;
     department: string;
+    postingPlace: string;
+    section: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -46,5 +48,5 @@ export async function getAllStaff(
         throw new Error(result.message || "Failed to fetch staff");
     }
 
-    return result.result;
+    return result;
 }

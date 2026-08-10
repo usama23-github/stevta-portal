@@ -19,6 +19,7 @@ model PostingPlace {
   sections      Section[]
   designations  Designation[]
   staff         Staff[]
+  leaves        Leave[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -36,6 +37,8 @@ model Section {
   postingPlace    PostingPlace @relation(fields: [postingPlaceId], references: [id])
 
   staff           Staff[]
+
+  leave           Leave[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -57,6 +60,7 @@ model Region {
   updatedAt   DateTime @updatedAt
 
   districts   District[]
+  leaves      Leave[]
 }
 
 // =========================
@@ -116,6 +120,8 @@ model Designation {
 
   staff           Staff[]
 
+  leave           Leave[]
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -147,6 +153,8 @@ model Staff {
   section         Section?      @relation(fields: [sectionId], references: [id])
 
   attendances     Attendance[]
+
+  leaves          Leave[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -232,6 +240,85 @@ model AttendanceLogs {
 
 }
 
+model LeaveType {
+  id          Int      @id @default(autoincrement())
+
+  name        String   @unique
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  leaves      Leave[]
+}
+
+model Leave {
+  id              String   @id @default(uuid())
+
+  staffId         String
+
+  postingPlaceId  Int?
+
+  regionId        Int?
+
+  designationId   Int?
+
+  sectionId       Int?
+
+  leaveTypeId     Int
+
+  fromDate        DateTime
+
+  toDate          DateTime
+
+  totalDays       Decimal   @db.Decimal(5,2)
+
+  reason          String?
+
+  remarks         String?
+
+  createdById     String?
+
+  appliedAt       DateTime @default(now())
+
+  approvedAt      DateTime?
+
+  rejectedAt      DateTime?
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+  staff           Staff @relation(fields: [staffId], references: [id])
+
+  postingPlace    PostingPlace? @relation(fields: [postingPlaceId], references: [id])
+
+  region          Region? @relation(fields: [regionId], references: [id])
+
+  designation     Designation? @relation(fields: [designationId], references: [id])
+
+  section         Section? @relation(fields: [sectionId], references: [id])
+
+  leaveType       LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  createdBy       User? @relation(fields: [createdById], references: [id])
+
+  documents       LeaveDocument[]
+}
+
+model LeaveDocument {
+  id          String @id @default(uuid())
+
+  leaveId     String
+
+  fileName    String
+
+  filePath    String
+
+  uploadedAt  DateTime @default(now())
+
+  leave       Leave @relation(fields: [leaveId], references: [id])
+}
+
 // =========================
 // STAFF CATEGORY
 // =========================
@@ -263,10 +350,12 @@ model User {
 
   role          UserRole
 
-  isActive    Boolean  @default(true)
+  isActive      Boolean  @default(true)
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  createdLeaves Leave[]
 
 }
 

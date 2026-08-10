@@ -113,7 +113,7 @@ export default function StaffTable() {
                   {[
                     "Staff Name",
                     "Designation",
-                    "Department",
+                    "Section",
                   ].map((heading) => (
                     <th
                       key={heading}
@@ -132,12 +132,12 @@ export default function StaffTable() {
                     <td className="border-b border-[#f1f5f9] px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dbeafe] font-semibold text-[#2563eb]">
-                          {record.name.charAt(0)}
+                          {record.employeeName.charAt(0)}
                         </div>
 
                         <div>
                           <p className="font-semibold text-[#0f172a]">
-                            {record.name}
+                            {record.employeeName}
                           </p>
 
                           <p className="text-xs text-[#64748b]">
@@ -152,9 +152,9 @@ export default function StaffTable() {
                       {record.designation}
                     </td>
 
-                    {/* DEPARTMENT */}
+                    {/* SECTION */}
                     <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
-                      {record.department}
+                      {record.section}
                     </td>
                   </tr>
                 ))}
