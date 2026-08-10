@@ -2,7 +2,7 @@ import express from "express";
 
 import {
     attendanceDashboard,
-} from "../controllers/dashboard.controller.js";
+} from "./dashboard.controller.js";
 
 const router = express.Router();
 

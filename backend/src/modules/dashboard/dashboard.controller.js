@@ -1,6 +1,6 @@
 import {
   getAttendanceDashboard,
-} from "../services/dashboard.service.js";
+} from "./dashboard.service.js";
 
 export const attendanceDashboard = async (
   req,
