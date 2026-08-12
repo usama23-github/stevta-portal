@@ -17,7 +17,7 @@ const pathnameMap = {
 };
 
 const defaultMap = {
-  title: "Home",
+  title: "ADMIN",
   description: "",
 };
 
