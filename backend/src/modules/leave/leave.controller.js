@@ -63,14 +63,34 @@ export const getAllLeaveTypes = async (
 ) => {
     try {
 
-        const leaveTypes =
-            await getAllLeaveTypesService();
+        const {
+            page = 1,
+            limit = 10,
+            search = "",
+            sortField = "name",
+            sortOrder = "asc",
+        } = req.query;
+
+
+        const result =
+            await getAllLeaveTypesService({
+                page,
+                limit,
+                search,
+                sortField,
+                sortOrder,
+            });
+
 
         return res.status(200).json({
             success: true,
+
             message:
                 "Leave types fetched successfully.",
-            data: leaveTypes,
+
+            data: result.data,
+
+            meta: result.meta,
         });
 
     } catch (error) {
@@ -82,6 +102,7 @@ export const getAllLeaveTypes = async (
 
         return res.status(500).json({
             success: false,
+
             message:
                 "Failed to fetch leave types.",
         });
