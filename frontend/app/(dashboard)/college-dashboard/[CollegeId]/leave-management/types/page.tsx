@@ -121,8 +121,7 @@ export default function page() {
 
                                 {[
                                     "S no",
-                                    "Leave Type",
-                                    "Description"
+                                    "Leave Type"
                                 ].map((heading) => (
 
                                     <th
@@ -142,7 +141,7 @@ export default function page() {
 
                         <tbody>
 
-                            {leaves.map((record) => (
+                            {leaves.map((record, index) => (
 
                                 <tr
                                     key={record.id}
@@ -155,7 +154,7 @@ export default function page() {
 
                                     <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
 
-                                        1
+                                        {index + 1}
 
                                     </td>
 

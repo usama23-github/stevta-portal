@@ -131,7 +131,7 @@ export const getLeaveTypes = async (
         "https://portal.stevta.gos.pk/api/v1";
 
     const response = await fetch(
-        `${apiUrl}/api/leave/types}`,
+        `${apiUrl}/leave/types`,
         {
             method: "GET",
             headers: {

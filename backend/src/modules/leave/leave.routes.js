@@ -18,12 +18,10 @@ router.post(
     createLeaveType
 );
 
-
 // GET /api/leave/types
 router.get(
     "/types",
     getAllLeaveTypes
 );
-
 
 export default router;
