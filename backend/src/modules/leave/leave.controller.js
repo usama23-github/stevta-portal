@@ -1,6 +1,7 @@
 import {
     createLeaveTypeService,
     getAllLeaveTypesService,
+    markLeaveService,
 } from "./leave.service.js";
 
 
@@ -105,6 +106,139 @@ export const getAllLeaveTypes = async (
 
             message:
                 "Failed to fetch leave types.",
+        });
+    }
+};
+
+// ========================================
+// MARK LEAVE
+// ========================================
+
+export const markLeave = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const {
+            staffId,
+            leaveTypeId,
+            fromDate,
+            toDate,
+            reason,
+            remarks,
+        } = req.body;
+
+
+        // ======================================
+        // VALIDATION
+        // ======================================
+
+        if (!staffId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Employee is required.",
+            });
+        }
+
+
+        if (!leaveTypeId) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Leave type is required.",
+            });
+        }
+
+
+        if (!fromDate) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "From date is required.",
+            });
+        }
+
+
+        if (!toDate) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "To date is required.",
+            });
+        }
+
+
+        // ======================================
+        // CREATED BY
+        // ======================================
+
+        const createdById =
+            req.user?.id || null;
+
+
+        // ======================================
+        // MARK LEAVE
+        // ======================================
+
+        const result =
+            await markLeaveService({
+
+                staffId,
+
+                leaveTypeId,
+
+                fromDate,
+
+                toDate,
+
+                reason,
+
+                remarks,
+
+                createdById,
+
+                notification:
+                    req.file || null,
+
+            });
+
+
+        // ======================================
+        // RESPONSE
+        // ======================================
+
+        return res.status(201).json({
+
+            success: true,
+
+            message:
+                "Leave marked successfully.",
+
+            data: result,
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Mark Leave Error:",
+            error
+        );
+
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Failed to mark leave.",
+
         });
     }
 };
