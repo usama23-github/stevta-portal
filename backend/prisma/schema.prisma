@@ -17,6 +17,7 @@ model PostingPlace {
   order         Int?
 
   sections      Section[]
+  departments   Department[]
   designations  Designation[]
   staff         Staff[]
   leaves        Leave[]
@@ -36,6 +37,9 @@ model Section {
   postingPlaceId  Int
   postingPlace    PostingPlace @relation(fields: [postingPlaceId], references: [id])
 
+  departmentId    Int?
+  department      Department?      @relation(fields: [departmentId], references: [id])
+
   staff           Staff[]
 
   leave           Leave[]
@@ -44,6 +48,26 @@ model Section {
   updatedAt       DateTime @updatedAt
 
   @@unique([section, postingPlaceId])
+  @@index([postingPlaceId])
+}
+
+// =========================
+// DEPARTMENTS
+// =========================
+
+model Department {
+  id              Int      @id @default(autoincrement())
+  department      String
+
+  postingPlaceId  Int
+  postingPlace    PostingPlace @relation(fields: [postingPlaceId], references: [id])
+
+  section         Section[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([department, postingPlaceId])
   @@index([postingPlaceId])
 }
 

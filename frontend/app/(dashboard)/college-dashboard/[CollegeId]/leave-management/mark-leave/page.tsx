@@ -1,1322 +1,1789 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-
-import { PDFDocument } from "pdf-lib";
-
 import { useEffect, useState } from "react";
 
 import {
-    Search,
+    CalendarDays,
+    Check,
+    CheckCircle2,
+    ChevronsUpDown,
     ChevronLeft,
     ChevronRight,
-    Filter,
-    CalendarDays,
-    CalendarPlus,
-    CheckCircle2,
-    XCircle,
-    Clock3,
-    Eye,
     FileText,
+    Loader2,
+    Search,
+    User,
+    X,
 } from "lucide-react";
 
-import { getLeaves, LeaveRecord } from "@/lib/api/leaves";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
-async function compressPdf(file: File): Promise<File> {
-    const arrayBuffer = await file.arrayBuffer();
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from "@/components/ui/command";
 
-    const pdfDoc = await PDFDocument.load(arrayBuffer, {
-        ignoreEncryption: true,
-    });
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
-    // Remove unnecessary metadata
-    pdfDoc.setTitle("");
-    pdfDoc.setAuthor("");
-    pdfDoc.setSubject("");
-    pdfDoc.setKeywords([]);
+import { Button } from "@/components/ui/button";
 
-    const compressedBytes = await pdfDoc.save({
-        useObjectStreams: true,
-        addDefaultPage: false,
-    });
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 
-    // Create a proper ArrayBuffer for Blob/File
-    const buffer = new ArrayBuffer(compressedBytes.byteLength);
+import { Input } from "@/components/ui/input";
 
-    new Uint8Array(buffer).set(compressedBytes);
+import { Label } from "@/components/ui/label";
 
-    return new File(
-        [buffer],
-        file.name,
-        {
-            type: "application/pdf",
-        }
-    );
-}
+import { Textarea } from "@/components/ui/textarea";
 
-export default function LeaveManagement() {
-    const [employeeSearch, setEmployeeSearch] =
-        useState("");
 
-    const [employees, setEmployees] = useState<any[]>([]);
+// ======================================================
+// API
+// ======================================================
 
-    const [notificationFile, setNotificationFile] =
-        useState<File | null>(null);
+const API_URL =
+    process.env.NEXT_PUBLIC_API_URL ||
+    "http://localhost:5000/api";
+
+
+// ======================================================
+// TYPES
+// ======================================================
+
+type Designation = {
+    id: number;
+    designation: string;
+};
+
+type Section = {
+    id: number;
+    section: string;
+};
+
+type LeaveType = {
+    id: number;
+    name: string;
+};
+
+type Employee = {
+    id: string;
+    empNo: string;
+    name: string;
+
+    designation?: {
+        id: number;
+        designation: string;
+    } | null;
+
+    section?: {
+        id: number;
+        section: string;
+    } | null;
+
+    postingPlace?: {
+        id: number;
+        postingPlace: string;
+    } | null;
+};
+
+type EmployeeMeta = {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+};
+
+
+// ======================================================
+// PAGE
+// ======================================================
+
+export default function MarkLeavePage() {
+
+    // ====================================================
+    // EMPLOYEE DROPDOWN
+    // ====================================================
+
+    const [employeeOpen, setEmployeeOpen] =
+        useState(false);
+
+    const [employees, setEmployees] =
+        useState<Employee[]>([]);
 
     const [selectedEmployee, setSelectedEmployee] =
-        useState<any>(null);
+        useState<Employee | null>(null);
+
+    const [employeeSearch, setEmployeeSearch] =
+        useState("");
 
     const [employeeLoading, setEmployeeLoading] =
         useState(false);
 
-    const [showEmployeeResults, setShowEmployeeResults] =
+    const [employeeMeta, setEmployeeMeta] =
+        useState<EmployeeMeta>({
+            total: 0,
+            page: 1,
+            limit: 20,
+            totalPages: 1,
+        });
+
+    const [employeePage, setEmployeePage] =
+        useState(1);
+
+
+    // ====================================================
+    // DESIGNATION
+    // ====================================================
+
+    const [designations, setDesignations] =
+        useState<Designation[]>([]);
+
+    const [selectedDesignation, setSelectedDesignation] =
+        useState<number | null>(null);
+
+    const [designationOpen, setDesignationOpen] =
         useState(false);
-    const [showMarkLeave, setShowMarkLeave] =
+
+
+    // ====================================================
+    // SECTION
+    // ====================================================
+
+    const [sections, setSections] =
+        useState<Section[]>([]);
+
+    const [selectedSection, setSelectedSection] =
+        useState<number | null>(null);
+
+    const [sectionOpen, setSectionOpen] =
         useState(false);
 
-    const [loading, setLoading] = useState(true);
 
-    const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
+    // ====================================================
+    // LEAVE TYPES
+    // ====================================================
 
-    const [search, setSearch] = useState("");
+    const [leaveTypes, setLeaveTypes] =
+        useState<LeaveType[]>([]);
 
-    const [statusFilter, setStatusFilter] =
+    const [selectedLeaveType, setSelectedLeaveType] =
         useState("");
 
-    const [leaveTypeFilter, setLeaveTypeFilter] =
+
+    // ====================================================
+    // LEAVE FORM
+    // ====================================================
+
+    const [fromDate, setFromDate] =
         useState("");
 
-    const [page, setPage] = useState(1);
+    const [toDate, setToDate] =
+        useState("");
 
-    const [totalPages, setTotalPages] = useState(1);
+    const [reason, setReason] =
+        useState("");
 
-    const [totalLeaves, setTotalLeaves] = useState(0);
+    const [notificationFile, setNotificationFile] =
+        useState<File | null>(null);
 
-    const [showRecords, setShowRecords] = useState(0);
 
-    const [compressingPdf, setCompressingPdf] =
+    // ====================================================
+    // PAGE STATES
+    // ====================================================
+
+    const [pageLoading, setPageLoading] =
         useState(false);
 
-    // =====================================================
-    // LOAD DATA
-    // =====================================================
+    const [submitting, setSubmitting] =
+        useState(false);
 
-    const loadData = async (
-        pageNumber = page,
-        searchValue = search,
-        status = statusFilter,
-        leaveType = leaveTypeFilter
-    ) => {
+    const [errorMessage, setErrorMessage] =
+        useState("");
+
+    const [successMessage, setSuccessMessage] =
+        useState("");
+
+
+    // ====================================================
+    // LOAD INITIAL DATA
+    // ====================================================
+
+    useEffect(() => {
+
+        loadInitialData();
+
+    }, []);
+
+
+    // ====================================================
+    // LOAD DESIGNATIONS, SECTIONS, LEAVE TYPES
+    // ====================================================
+
+    const loadInitialData = async () => {
+
         try {
-            setLoading(true);
 
-            const result = await getLeaves(
-                pageNumber,
-                10,
-                searchValue,
-                status,
-                leaveType
+            setPageLoading(true);
+
+            setErrorMessage("");
+
+
+            const [
+                designationResponse,
+                sectionResponse,
+                leaveTypeResponse,
+            ] = await Promise.all([
+
+                fetch(
+                    `${API_URL}/designations`
+                ),
+
+                fetch(
+                    `${API_URL}/sections`
+                ),
+
+                fetch(
+                    `${API_URL}/leave/types`
+                ),
+
+            ]);
+
+
+            const designationResult =
+                await designationResponse.json();
+
+            const sectionResult =
+                await sectionResponse.json();
+
+            const leaveTypeResult =
+                await leaveTypeResponse.json();
+
+
+            if (!designationResponse.ok) {
+
+                throw new Error(
+                    designationResult.message ||
+                    "Failed to load designations."
+                );
+
+            }
+
+
+            if (!sectionResponse.ok) {
+
+                throw new Error(
+                    sectionResult.message ||
+                    "Failed to load sections."
+                );
+
+            }
+
+
+            if (!leaveTypeResponse.ok) {
+
+                throw new Error(
+                    leaveTypeResult.message ||
+                    "Failed to load leave types."
+                );
+
+            }
+
+            setDesignations(
+                designationResult.result.data || []
             );
 
-            setLeaves(result.data);
+            setSections(
+                sectionResult.result.data || []
+            );
 
-            setTotalPages(result.meta.totalPages);
-
-            setTotalLeaves(result.meta.total);
-
-            setShowRecords(result.data.length);
+            setLeaveTypes(
+                leaveTypeResult.data || []
+            );
 
         } catch (error) {
-            console.error(
-                "Leave Management Error:",
-                error
+
+            console.error(error);
+
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load page data."
             );
+
         } finally {
-            setLoading(false);
+
+            setPageLoading(false);
+
         }
+
     };
 
-    // =====================================================
-    // INITIAL LOAD / PAGINATION
-    // =====================================================
 
-    useEffect(() => {
-        loadData(page);
-    }, [page]);
+    // ====================================================
+    // FETCH EMPLOYEES
+    // ====================================================
 
-    useEffect(() => {
-
-        if (employeeSearch.length < 2) {
-            setEmployees([]);
-            return;
-        }
-
-        // Don't search again after selecting an employee
-        if (selectedEmployee) {
-            return;
-        }
-
-        const timer = setTimeout(async () => {
-
-            try {
-
-                setEmployeeLoading(true);
-
-                const apiUrl =
-                    process.env.NEXT_PUBLIC_API_URL ||
-                    "http://localhost:5000";
-
-                const response = await fetch(
-                    `${apiUrl}/api/staff/search?search=${encodeURIComponent(
-                        employeeSearch
-                    )}&limit=20`
-                );
-
-                const result = await response.json();
-
-                setEmployees(result.data || []);
-
-            } catch (error) {
-
-                console.error(
-                    "Employee search error:",
-                    error
-                );
-
-                setEmployees([]);
-
-            } finally {
-
-                setEmployeeLoading(false);
-
-            }
-
-        }, 400);
-
-        return () => clearTimeout(timer);
-
-    }, [employeeSearch, selectedEmployee]);
-
-    // =====================================================
-    // SEARCH
-    // =====================================================
-
-    const handleSearch = async (
-        searchValue: string
+    const fetchEmployees = async (
+        search = employeeSearch,
+        currentPage = employeePage
     ) => {
-        setPage(1);
-
-        loadData(
-            1,
-            searchValue,
-            statusFilter,
-            leaveTypeFilter
-        );
-    };
-
-    // =====================================================
-    // STATUS FILTER
-    // =====================================================
-
-    const handleStatusChange = async (
-        status: string
-    ) => {
-        setPage(1);
-
-        loadData(
-            1,
-            search,
-            status,
-            leaveTypeFilter
-        );
-    };
-
-    // =====================================================
-    // LEAVE TYPE FILTER
-    // =====================================================
-
-    const handleLeaveTypeChange = async (
-        leaveType: string
-    ) => {
-        setPage(1);
-
-        loadData(
-            1,
-            search,
-            statusFilter,
-            leaveType
-        );
-    };
-
-    const handleNotificationFile = async (
-        file: File
-    ) => {
-        // PDF validation
-        if (file.type !== "application/pdf") {
-            alert("Please select a PDF file.");
-            return;
-        }
-
-        // Maximum original file size: 20 MB
-        if (file.size > 20 * 1024 * 1024) {
-            alert("PDF must be less than 20 MB.");
-            return;
-        }
 
         try {
-            setCompressingPdf(true);
 
-            const originalSize = file.size;
+            setEmployeeLoading(true);
 
-            const compressedFile =
-                await compressPdf(file);
+            const params =
+                new URLSearchParams();
 
-            const compressedSize =
-                compressedFile.size;
 
-            console.log(
-                `Original PDF: ${(originalSize / 1024 / 1024).toFixed(2)} MB`
+            params.set(
+                "page",
+                String(currentPage)
             );
 
-            console.log(
-                `Compressed PDF: ${(compressedSize / 1024 / 1024).toFixed(2)} MB`
+
+            params.set(
+                "limit",
+                "20"
             );
 
-            // If compression makes the file larger,
-            // keep the original file.
-            const finalFile =
-                compressedSize < originalSize
-                    ? compressedFile
-                    : file;
 
-            // Final uploaded file must be <= 5 MB
-            if (
-                finalFile.size >
-                5 * 1024 * 1024
-            ) {
-                alert(
-                    "The PDF is still larger than 5 MB after compression. Please select a smaller PDF."
+            if (search.trim()) {
+
+                params.set(
+                    "search",
+                    search.trim()
                 );
 
-                setNotificationFile(null);
-                return;
             }
 
-            setNotificationFile(finalFile);
+
+            if (selectedDesignation) {
+
+                params.set(
+                    "designationId",
+                    String(selectedDesignation)
+                );
+
+            }
+
+
+            if (selectedSection) {
+
+                params.set(
+                    "sectionId",
+                    String(selectedSection)
+                );
+
+            }
+
+
+            const response =
+                await fetch(
+                    `${API_URL}/staff?${params.toString()}`
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.message ||
+                    "Failed to load employees."
+                );
+
+            }
+
+
+            setEmployees(
+                result.data || []
+            );
+
+
+            if (result.meta) {
+
+                setEmployeeMeta(
+                    result.meta
+                );
+
+            }
 
         } catch (error) {
 
-            console.error(
-                "PDF compression error:",
-                error
+            console.error(error);
+
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load employees."
             );
 
-            alert(
-                "Unable to process the PDF. Please try another file."
+        } finally {
+
+            setEmployeeLoading(false);
+
+        }
+
+    };
+
+
+    // ====================================================
+    // OPEN EMPLOYEE DROPDOWN
+    // ====================================================
+
+    const handleEmployeeDropdown = (
+        open: boolean
+    ) => {
+
+        setEmployeeOpen(open);
+
+
+        if (
+            open &&
+            employees.length === 0
+        ) {
+
+            setEmployeePage(1);
+
+            fetchEmployees(
+                employeeSearch,
+                1
             );
+
+        }
+
+    };
+
+
+    // ====================================================
+    // EMPLOYEE SEARCH
+    // ====================================================
+
+    useEffect(() => {
+
+        if (!employeeOpen) {
+            return;
+        }
+
+
+        const timer =
+            setTimeout(() => {
+
+                setEmployeePage(1);
+
+                fetchEmployees(
+                    employeeSearch,
+                    1
+                );
+
+            }, 400);
+
+
+        return () => {
+
+            clearTimeout(timer);
+
+        };
+
+    }, [
+        employeeSearch,
+        selectedDesignation,
+        selectedSection,
+    ]);
+
+
+    // ====================================================
+    // DESIGNATION FILTER
+    // ====================================================
+
+    const handleDesignationChange = (
+        value: string
+    ) => {
+
+        if (value === "all") {
+
+            setSelectedDesignation(null);
+
+        } else {
+
+            setSelectedDesignation(
+                Number(value)
+            );
+
+        }
+
+
+        setEmployeePage(1);
+
+        setEmployees([]);
+
+        if (employeeOpen) {
+
+            setTimeout(() => {
+
+                fetchEmployees(
+                    employeeSearch,
+                    1
+                );
+
+            }, 0);
+
+        }
+
+    };
+
+
+    // ====================================================
+    // SECTION FILTER
+    // ====================================================
+
+    const handleSectionChange = (
+        value: string
+    ) => {
+
+        if (value === "all") {
+
+            setSelectedSection(null);
+
+        } else {
+
+            setSelectedSection(
+                Number(value)
+            );
+
+        }
+
+
+        setEmployeePage(1);
+
+        setEmployees([]);
+
+        if (employeeOpen) {
+
+            setTimeout(() => {
+
+                fetchEmployees(
+                    employeeSearch,
+                    1
+                );
+
+            }, 0);
+
+        }
+
+    };
+
+
+    // ====================================================
+    // EMPLOYEE SELECT
+    // ====================================================
+
+    const handleEmployeeSelect = (
+        employee: Employee
+    ) => {
+
+        setSelectedEmployee(
+            employee
+        );
+
+        setEmployeeOpen(false);
+
+        setErrorMessage("");
+
+    };
+
+
+    // ====================================================
+    // LEAVE TYPE
+    // ====================================================
+
+    const selectedLeaveTypeObject =
+        leaveTypes.find(
+            (leaveType) =>
+                String(leaveType.id) ===
+                selectedLeaveType
+        );
+
+
+    const isCasualLeave =
+        selectedLeaveTypeObject?.name
+            ?.trim()
+            .toLowerCase() ===
+        "casual leave";
+
+
+    // ====================================================
+    // CASUAL LEAVE
+    // ====================================================
+
+    useEffect(() => {
+
+        if (
+            isCasualLeave &&
+            fromDate
+        ) {
+
+            setToDate(
+                fromDate
+            );
+
+        }
+
+    }, [
+        isCasualLeave,
+        fromDate,
+    ]);
+
+
+    // ====================================================
+    // FILE CHANGE
+    // ====================================================
+
+    const handleFileChange = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
+        const file =
+            event.target.files?.[0];
+
+
+        if (!file) {
 
             setNotificationFile(null);
 
-        } finally {
-            setCompressingPdf(false);
-        }
-    };
+            return;
 
-    // =====================================================
-    // STATUS
-    // =====================================================
-
-    const getLeaveStatus = (
-        record: LeaveRecord
-    ) => {
-        if (record.rejectedAt) {
-            return "Rejected";
         }
 
-        if (record.approvedAt) {
-            return "Approved";
-        }
 
-        return "Pending";
-    };
+        if (
+            file.type !==
+            "application/pdf" &&
+            !file.name
+                .toLowerCase()
+                .endsWith(".pdf")
+        ) {
 
-    // =====================================================
-    // STATUS BADGE
-    // =====================================================
-
-    const getStatusBadge = (
-        record: LeaveRecord
-    ) => {
-        const status = getLeaveStatus(record);
-
-        if (status === "Approved") {
-            return (
-                <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Approved
-                </div>
+            setErrorMessage(
+                "Only PDF files are allowed."
             );
+
+            event.target.value = "";
+
+            return;
+
         }
 
-        if (status === "Rejected") {
-            return (
-                <div className="inline-flex items-center gap-2 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
-                    <XCircle className="h-4 w-4" />
-                    Rejected
-                </div>
+
+        // Optional size restriction
+        // Change/remove if your backend
+        // allows larger files.
+
+        const maxSize =
+            10 * 1024 * 1024;
+
+
+        if (file.size > maxSize) {
+
+            setErrorMessage(
+                "PDF file size cannot exceed 10 MB."
             );
+
+            event.target.value = "";
+
+            return;
+
         }
 
-        return (
-            <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                <Clock3 className="h-4 w-4" />
-                Pending
-            </div>
+
+        setErrorMessage("");
+
+        setNotificationFile(
+            file
         );
+
     };
+
+
+    // ====================================================
+    // REMOVE PDF
+    // ====================================================
+
+    const removeNotificationFile = () => {
+
+        setNotificationFile(
+            null
+        );
+
+    };
+
+
+    // ====================================================
+    // SUBMIT LEAVE
+    // ====================================================
+
+    const handleSubmit = async (
+        event: React.FormEvent
+    ) => {
+
+        event.preventDefault();
+
+
+        setErrorMessage("");
+
+        setSuccessMessage("");
+
+
+        // --------------------------------------------
+        // VALIDATION
+        // --------------------------------------------
+
+        if (!selectedEmployee) {
+
+            setErrorMessage(
+                "Please select an employee."
+            );
+
+            return;
+
+        }
+
+
+        if (!selectedLeaveType) {
+
+            setErrorMessage(
+                "Please select a leave type."
+            );
+
+            return;
+
+        }
+
+
+        if (!fromDate) {
+
+            setErrorMessage(
+                "Please select the leave start date."
+            );
+
+            return;
+
+        }
+
+
+        if (!toDate) {
+
+            setErrorMessage(
+                "Please select the leave end date."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            !isCasualLeave &&
+            new Date(toDate) <
+            new Date(fromDate)
+        ) {
+
+            setErrorMessage(
+                "To date cannot be earlier than from date."
+            );
+
+            return;
+
+        }
+
+
+        try {
+
+            setSubmitting(true);
+
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "staffId",
+                selectedEmployee.id
+            );
+
+
+            formData.append(
+                "leaveTypeId",
+                selectedLeaveType
+            );
+
+
+            formData.append(
+                "fromDate",
+                fromDate
+            );
+
+
+            formData.append(
+                "toDate",
+                isCasualLeave
+                    ? fromDate
+                    : toDate
+            );
+
+
+            if (reason.trim()) {
+
+                formData.append(
+                    "reason",
+                    reason.trim()
+                );
+
+            }
+
+
+            // Optional PDF
+
+            if (notificationFile) {
+
+                formData.append(
+                    "notification",
+                    notificationFile
+                );
+
+            }
+
+
+            const response =
+                await fetch(
+                    `${API_URL}/leaves`,
+                    {
+                        method: "POST",
+                        body: formData,
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    result.message ||
+                    "Failed to mark leave."
+                );
+
+            }
+
+
+            setSuccessMessage(
+                result.message ||
+                "Leave marked successfully."
+            );
+
+
+            resetForm();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to mark leave."
+            );
+
+        } finally {
+
+            setSubmitting(false);
+
+        }
+
+    };
+
+
+    // ====================================================
+    // RESET FORM
+    // ====================================================
+
+    const resetForm = () => {
+
+        setSelectedEmployee(
+            null
+        );
+
+        setSelectedLeaveType("");
+
+        setFromDate("");
+
+        setToDate("");
+
+        setReason("");
+
+        setNotificationFile(
+            null
+        );
+
+    };
+
+
+    // ====================================================
+    // CLEAR FILTERS
+    // ====================================================
+
+    const clearFilters = () => {
+
+        setSelectedDesignation(
+            null
+        );
+
+        setSelectedSection(
+            null
+        );
+
+        setEmployeeSearch("");
+
+        setEmployeePage(1);
+
+        setEmployees([]);
+
+        if (employeeOpen) {
+
+            setTimeout(() => {
+
+                fetchEmployees(
+                    "",
+                    1
+                );
+
+            }, 0);
+
+        }
+
+    };
+
+
+    // ====================================================
+    // EMPLOYEE NEXT PAGE
+    // ====================================================
+
+    const handleEmployeeNext = () => {
+
+        if (
+            employeePage >=
+            employeeMeta.totalPages
+        ) {
+
+            return;
+
+        }
+
+
+        const nextPage =
+            employeePage + 1;
+
+
+        setEmployeePage(
+            nextPage
+        );
+
+
+        fetchEmployees(
+            employeeSearch,
+            nextPage
+        );
+
+    };
+
+
+    // ====================================================
+    // EMPLOYEE PREVIOUS PAGE
+    // ====================================================
+
+    const handleEmployeePrevious = () => {
+
+        if (
+            employeePage <= 1
+        ) {
+
+            return;
+
+        }
+
+
+        const previousPage =
+            employeePage - 1;
+
+
+        setEmployeePage(
+            previousPage
+        );
+
+
+        fetchEmployees(
+            employeeSearch,
+            previousPage
+        );
+
+    };
+
+
+    // ====================================================
+    // RENDER
+    // ====================================================
 
     return (
-        <div className="mt-8 rounded-3xl border border-[#dbe4f0] bg-white shadow-sm">
 
-            {/* ================================================= */}
-            {/* HEADER */}
-            {/* ================================================= */}
+        <div className="min-h-screen bg-slate-50 p-4 md:p-6 lg:p-8">
 
-            <div className="flex flex-col gap-5 border-b border-[#e2e8f0] p-6">
-                <div className="flex flex-col gap-4 border-b border-[#e2e8f0] p-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="mx-auto max-w-5xl">
 
-                    {/* TITLE */}
 
-                    <div>
+                {/* ==================================================
+            HEADER
+        ================================================== */}
 
-                        <h2 className="text-2xl font-bold text-[#0f172a]">
-                            Leave Management
-                        </h2>
+                <div className="mb-6">
 
-                        <p className="mt-1 text-sm text-[#64748b]">
-                            Manage staff leave applications and approvals
-                        </p>
-
-                    </div>
-
-                    <Button
-                        className="h-11 rounded-xl bg-[#2563eb] px-5 text-white shadow-sm hover:bg-[#1d4ed8]"
-                        onClick={() => setShowMarkLeave(true)}
-                    >
-                        <CalendarPlus className="mr-2 h-4 w-4" />
+                    <h1 className="text-2xl font-bold text-slate-900">
                         Mark Leave
-                    </Button>
+                    </h1>
 
-
-
-                </div>
-                {/* FILTERS */}
-
-                <div>
-
-                    {/* SEARCH */}
-
-                    <div className="mb-4">
-
-                        <div className="relative">
-
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
-
-                            <input
-                                type="text"
-                                placeholder="Search staff..."
-                                value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value);
-
-                                    setPage(1);
-
-                                    if (
-                                        e.target.value === ""
-                                    ) {
-                                        handleSearch("");
-                                    }
-                                }}
-                                className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-24 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
-                            />
-
-                            <Button
-                                className="absolute right-0 h-11 rounded-l-none rounded-r-xl"
-                                onClick={() =>
-                                    handleSearch(search)
-                                }
-                            >
-                                Search
-                            </Button>
-
-                        </div>
-
-                    </div>
-
-                    {/* FILTER ROW */}
-
-                    <div className="flex flex-col gap-3 lg:flex-row">
-
-                        {/* STATUS */}
-
-                        <div className="relative">
-
-                            <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
-
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => {
-                                    setStatusFilter(
-                                        e.target.value
-                                    );
-
-                                    handleStatusChange(
-                                        e.target.value
-                                    );
-                                }}
-                                className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
-                            >
-
-                                <option value="">
-                                    All Leave Status
-                                </option>
-
-                                <option value="pending">
-                                    Pending
-                                </option>
-
-                                <option value="approved">
-                                    Approved
-                                </option>
-
-                                <option value="rejected">
-                                    Rejected
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                        {/* LEAVE TYPE */}
-
-                        <div className="relative">
-
-                            <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
-
-                            <select
-                                value={leaveTypeFilter}
-                                onChange={(e) => {
-                                    setLeaveTypeFilter(
-                                        e.target.value
-                                    );
-
-                                    handleLeaveTypeChange(
-                                        e.target.value
-                                    );
-                                }}
-                                className="h-11 w-full rounded-xl border border-[#dbe4f0] bg-white pl-10 pr-10 text-sm outline-none transition focus:border-[#2563eb] focus:ring-2 focus:ring-blue-100"
-                            >
-
-                                <option value="">
-                                    All Leave Types
-                                </option>
-
-                                <option value="1">
-                                    Casual Leave
-                                </option>
-
-                                <option value="2">
-                                    Medical Leave
-                                </option>
-
-                                <option value="3">
-                                    Earned Leave
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Select an employee and enter
+                        the leave details.
+                    </p>
 
                 </div>
-            </div>
 
-            {/* ================================================= */}
-            {/* TABLE */}
-            {/* ================================================= */}
 
-            <div className="overflow-x-auto">
+                {/* ==================================================
+            SUCCESS
+        ================================================== */}
 
-                {loading ? (
+                {successMessage && (
 
-                    <div className="p-10 text-center">
+                    <div className="mb-6 flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4">
 
-                        <p className="text-[#64748b]">
-                            Loading leave records...
-                        </p>
+                        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-green-600" />
+
+                        <div className="flex-1">
+
+                            <p className="font-semibold text-green-800">
+                                Success
+                            </p>
+
+                            <p className="mt-1 text-sm text-green-700">
+                                {successMessage}
+                            </p>
+
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setSuccessMessage("")
+                            }
+                            className="text-green-600"
+                        >
+
+                            <X className="size-4" />
+
+                        </button>
 
                     </div>
-
-                ) : (
-
-                    <table className="w-full min-w-[1300px]">
-
-                        {/* TABLE HEADER */}
-
-                        <thead className="bg-[#f8fafc]">
-
-                            <tr>
-
-                                {[
-                                    "Staff Name",
-                                    "Designation",
-                                    "Section",
-                                    "Leave Type",
-                                    "From Date",
-                                    "To Date",
-                                    "Total Days",
-                                    "Applied At",
-                                    "Status",
-                                    "Action",
-                                ].map((heading) => (
-
-                                    <th
-                                        key={heading}
-                                        className="border-b border-[#e2e8f0] px-6 py-4 text-left text-sm font-semibold text-[#334155]"
-                                    >
-                                        {heading}
-                                    </th>
-
-                                ))}
-
-                            </tr>
-
-                        </thead>
-
-                        {/* TABLE BODY */}
-
-                        <tbody>
-
-                            {leaves.map((record) => (
-
-                                <tr
-                                    key={record.id}
-                                    className="transition hover:bg-[#f8fafc]"
-                                >
-
-                                    {/* STAFF */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4">
-
-                                        <div className="flex items-center gap-3">
-
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dbeafe] font-semibold text-[#2563eb]">
-                                                {record.staff.name.charAt(0)}
-                                            </div>
-
-                                            <div>
-
-                                                <p className="font-semibold text-[#0f172a]">
-                                                    {record.staff.name}
-                                                </p>
-
-                                                <p className="text-xs text-[#64748b]">
-                                                    Staff ID #{record.staff.empNo}
-                                                </p>
-
-                                            </div>
-
-                                        </div>
-
-                                    </td>
-
-                                    {/* DESIGNATION */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
-
-                                        {record.staff.designation}
-
-                                    </td>
-
-                                    {/* SECTION */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
-
-                                        {record.staff.section}
-
-                                    </td>
-
-                                    {/* LEAVE TYPE */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4">
-
-                                        <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-
-                                            <CalendarDays className="h-4 w-4" />
-
-                                            {record.leaveType.name}
-
-                                        </div>
-
-                                    </td>
-
-                                    {/* FROM */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm font-medium text-[#0f172a]">
-
-                                        {record.fromDate}
-
-                                    </td>
-
-                                    {/* TO */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm font-medium text-[#0f172a]">
-
-                                        {record.toDate}
-
-                                    </td>
-
-                                    {/* TOTAL DAYS */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4">
-
-                                        <div className="inline-flex items-center gap-2 rounded-full bg-purple-50 px-3 py-1 text-sm font-semibold text-purple-700">
-
-                                            {record.totalDays} Days
-
-                                        </div>
-
-                                    </td>
-
-                                    {/* APPLIED */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
-
-                                        {record.appliedAt}
-
-                                    </td>
-
-                                    {/* STATUS */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4">
-
-                                        {getStatusBadge(record)}
-
-                                    </td>
-
-                                    {/* ACTION */}
-
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4">
-
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="rounded-xl"
-                                            onClick={() => {
-                                                console.log(
-                                                    "View Leave:",
-                                                    record.id
-                                                );
-                                            }}
-                                        >
-
-                                            <Eye className="mr-2 h-4 w-4" />
-
-                                            View
-
-                                        </Button>
-
-                                    </td>
-
-                                </tr>
-
-                            ))}
-
-                            {/* EMPTY */}
-
-                            {leaves.length === 0 && (
-
-                                <tr>
-
-                                    <td
-                                        colSpan={10}
-                                        className="px-6 py-16 text-center text-[#64748b]"
-                                    >
-
-                                        No leave records found.
-
-                                    </td>
-
-                                </tr>
-
-                            )}
-
-                        </tbody>
-
-                    </table>
 
                 )}
 
-            </div>
 
-            {/* ================================================= */}
-            {/* FOOTER / PAGINATION */}
-            {/* ================================================= */}
+                {/* ==================================================
+            ERROR
+        ================================================== */}
 
-            {!loading && (
+                {errorMessage && (
 
-                <>
+                    <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
 
-                    <div className="flex flex-col gap-4 border-t border-[#e2e8f0] p-6 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex-1">
 
-                        <p className="text-sm text-[#64748b]">
-
-                            Showing{" "}
-
-                            <span className="font-semibold text-[#0f172a]">
-                                {showRecords}
-                            </span>{" "}
-
-                            of{" "}
-
-                            <span className="font-semibold text-[#0f172a]">
-                                {totalLeaves}
-                            </span>{" "}
-
-                            records
-
-                        </p>
-
-                        {/* DESKTOP PAGINATION */}
-
-                        <div className="hidden items-center gap-2 md:flex">
-
-                            <button
-                                disabled={page === 1}
-                                onClick={() =>
-                                    setPage(
-                                        (prev) => prev - 1
-                                    )
-                                }
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dbe4f0] bg-white text-[#334155] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-
-                                <ChevronLeft className="h-4 w-4" />
-
-                            </button>
-
-                            {Array.from(
-                                {
-                                    length: totalPages,
-                                },
-                                (_, index) => (
-
-                                    <button
-                                        key={index}
-                                        onClick={() =>
-                                            setPage(index + 1)
-                                        }
-                                        className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-semibold transition ${page === index + 1
-                                            ? "bg-[#2563eb] text-white"
-                                            : "border border-[#dbe4f0] bg-white text-[#334155] hover:bg-[#f8fafc]"
-                                            }`}
-                                    >
-
-                                        {index + 1}
-
-                                    </button>
-
-                                )
-                            )}
-
-                            <button
-                                disabled={
-                                    page === totalPages
-                                }
-                                onClick={() =>
-                                    setPage(
-                                        (prev) => prev + 1
-                                    )
-                                }
-                                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#dbe4f0] bg-white text-[#334155] transition hover:bg-[#f8fafc] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-
-                                <ChevronRight className="h-4 w-4" />
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {/* MOBILE PAGINATION */}
-
-                    <div className="space-y-4 px-4 pb-4 md:hidden">
-
-                        <div className="flex items-center justify-between">
-
-                            <Button
-                                variant="outline"
-                                disabled={page === 1}
-                                onClick={() =>
-                                    setPage(
-                                        (prev) => prev - 1
-                                    )
-                                }
-                            >
-                                Previous
-                            </Button>
-
-                            <p className="text-sm text-[#64748b]">
-
-                                Page{" "}
-
-                                <span className="font-semibold text-[#0f172a]">
-                                    {page}
-                                </span>{" "}
-
-                                of{" "}
-
-                                <span className="font-semibold text-[#0f172a]">
-                                    {totalPages}
-                                </span>
-
+                            <p className="font-semibold text-red-800">
+                                Error
                             </p>
 
-                            <Button
-                                variant="outline"
-                                disabled={
-                                    page === totalPages
-                                }
-                                onClick={() =>
-                                    setPage(
-                                        (prev) => prev + 1
-                                    )
-                                }
-                            >
-                                Next
-                            </Button>
+                            <p className="mt-1 text-sm text-red-700">
+                                {errorMessage}
+                            </p>
 
                         </div>
 
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setErrorMessage("")
+                            }
+                            className="text-red-600"
+                        >
+
+                            <X className="size-4" />
+
+                        </button>
+
                     </div>
 
-                </>
+                )}
 
-            )}
 
-            {showMarkLeave && (
-                <div className="fixed inset-0 z-[9999] bg-black/50">
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-6"
+                >
 
-                    {/* MODAL CONTAINER */}
-                    <div className="flex h-full w-full items-center justify-center p-3 sm:p-6">
 
-                        <div className="flex h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl">
+                    {/* ==================================================
+              EMPLOYEE
+          ================================================== */}
 
-                            {/* ============================= */}
-                            {/* HEADER */}
-                            {/* ============================= */}
+                    <Card>
 
-                            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-5 py-4 sm:px-6 sm:py-5">
+                        <CardHeader>
 
-                                <div className="flex items-center gap-3">
+                            <CardTitle>
+                                Employee Information
+                            </CardTitle>
 
-                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-                                        <CalendarPlus className="h-5 w-5 text-blue-600" />
-                                    </div>
+                            <CardDescription>
+                                Filter employees and select the
+                                employee for this leave.
+                            </CardDescription>
 
-                                    <div>
-                                        <h2 className="text-lg font-bold text-slate-800 sm:text-xl">
-                                            Mark Leave
-                                        </h2>
+                        </CardHeader>
 
-                                        <p className="text-xs text-slate-500 sm:text-sm">
-                                            Mark leave for a staff member
-                                        </p>
-                                    </div>
+
+                        <CardContent className="space-y-5">
+
+
+                            {/* ============================================
+                  DESIGNATION + SECTION
+              ============================================ */}
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+
+                                {/* DESIGNATION */}
+
+                                <div>
+
+                                    <Label className="mb-2 block">
+                                        Designation
+                                    </Label>
+
+                                    <Popover
+                                        open={designationOpen}
+                                        onOpenChange={
+                                            setDesignationOpen
+                                        }
+                                    >
+
+                                        <PopoverTrigger asChild>
+
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-11 w-full justify-between font-normal"
+                                            >
+
+                                                {selectedDesignation
+                                                    ? designations.find(
+                                                        (item) =>
+                                                            item.id ===
+                                                            selectedDesignation
+                                                    )?.designation
+                                                    : (
+                                                        <span className="text-slate-400">
+                                                            All Designations
+                                                        </span>
+                                                    )}
+
+                                                <ChevronsUpDown className="size-4 opacity-50" />
+
+                                            </Button>
+
+                                        </PopoverTrigger>
+
+
+                                        <PopoverContent
+                                            align="start"
+                                            className="w-[--radix-popover-trigger-width] p-0"
+                                        >
+
+                                            <Command>
+
+                                                <CommandInput
+                                                    placeholder="Search designation..."
+                                                />
+
+                                                <CommandList>
+
+                                                    <CommandEmpty>
+                                                        No designation found.
+                                                    </CommandEmpty>
+
+                                                    <CommandGroup>
+
+                                                        <CommandItem
+                                                            value="all designations"
+                                                            onSelect={() => {
+
+                                                                handleDesignationChange(
+                                                                    "all"
+                                                                );
+
+                                                                setDesignationOpen(
+                                                                    false
+                                                                );
+
+                                                            }}
+                                                        >
+
+                                                            <Check
+                                                                className={`mr-2 size-4 ${selectedDesignation ===
+                                                                    null
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                                    }`}
+                                                            />
+
+                                                            All Designations
+
+                                                        </CommandItem>
+
+
+                                                        {designations.map(
+                                                            (designation) => (
+
+                                                                <CommandItem
+                                                                    key={
+                                                                        designation.id
+                                                                    }
+                                                                    value={
+                                                                        designation.designation
+                                                                    }
+                                                                    onSelect={() => {
+
+                                                                        handleDesignationChange(
+                                                                            String(
+                                                                                designation.id
+                                                                            )
+                                                                        );
+
+                                                                        setDesignationOpen(
+                                                                            false
+                                                                        );
+
+                                                                    }}
+                                                                >
+
+                                                                    <Check
+                                                                        className={`mr-2 size-4 ${selectedDesignation ===
+                                                                            designation.id
+                                                                            ? "opacity-100"
+                                                                            : "opacity-0"
+                                                                            }`}
+                                                                    />
+
+                                                                    {
+                                                                        designation.designation
+                                                                    }
+
+                                                                </CommandItem>
+
+                                                            )
+                                                        )}
+
+                                                    </CommandGroup>
+
+                                                </CommandList>
+
+                                            </Command>
+
+                                        </PopoverContent>
+
+                                    </Popover>
 
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setShowMarkLeave(false)}
-                                    className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                >
-                                    ✕
-                                </button>
+
+                                {/* SECTION */}
+
+                                <div>
+
+                                    <Label className="mb-2 block">
+                                        Section
+                                    </Label>
+
+                                    <Popover
+                                        open={sectionOpen}
+                                        onOpenChange={
+                                            setSectionOpen
+                                        }
+                                    >
+
+                                        <PopoverTrigger asChild>
+
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-11 w-full justify-between font-normal"
+                                            >
+
+                                                {selectedSection
+                                                    ? sections.find(
+                                                        (item) =>
+                                                            item.id ===
+                                                            selectedSection
+                                                    )?.section
+                                                    : (
+                                                        <span className="text-slate-400">
+                                                            All Sections
+                                                        </span>
+                                                    )}
+
+                                                <ChevronsUpDown className="size-4 opacity-50" />
+
+                                            </Button>
+
+                                        </PopoverTrigger>
+
+
+                                        <PopoverContent
+                                            align="start"
+                                            className="w-[--radix-popover-trigger-width] p-0"
+                                        >
+
+                                            <Command>
+
+                                                <CommandInput
+                                                    placeholder="Search section..."
+                                                />
+
+                                                <CommandList>
+
+                                                    <CommandEmpty>
+                                                        No section found.
+                                                    </CommandEmpty>
+
+                                                    <CommandGroup>
+
+                                                        <CommandItem
+                                                            value="all sections"
+                                                            onSelect={() => {
+
+                                                                handleSectionChange(
+                                                                    "all"
+                                                                );
+
+                                                                setSectionOpen(
+                                                                    false
+                                                                );
+
+                                                            }}
+                                                        >
+
+                                                            <Check
+                                                                className={`mr-2 size-4 ${selectedSection ===
+                                                                    null
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                                    }`}
+                                                            />
+
+                                                            All Sections
+
+                                                        </CommandItem>
+
+
+                                                        {sections.map(
+                                                            (section) => (
+
+                                                                <CommandItem
+                                                                    key={
+                                                                        section.id
+                                                                    }
+                                                                    value={
+                                                                        section.section
+                                                                    }
+                                                                    onSelect={() => {
+
+                                                                        handleSectionChange(
+                                                                            String(
+                                                                                section.id
+                                                                            )
+                                                                        );
+
+                                                                        setSectionOpen(
+                                                                            false
+                                                                        );
+
+                                                                    }}
+                                                                >
+
+                                                                    <Check
+                                                                        className={`mr-2 size-4 ${selectedSection ===
+                                                                            section.id
+                                                                            ? "opacity-100"
+                                                                            : "opacity-0"
+                                                                            }`}
+                                                                    />
+
+                                                                    {
+                                                                        section.section
+                                                                    }
+
+                                                                </CommandItem>
+
+                                                            )
+                                                        )}
+
+                                                    </CommandGroup>
+
+                                                </CommandList>
+
+                                            </Command>
+
+                                        </PopoverContent>
+
+                                    </Popover>
+
+                                </div>
 
                             </div>
 
-                            {/* ============================= */}
-                            {/* SCROLLABLE BODY */}
-                            {/* ============================= */}
 
-                            <div className="min-h-0 flex-1 overflow-y-auto">
+                            {/* ============================================
+                  EMPLOYEE DROPDOWN
+              ============================================ */}
 
-                                <div className="space-y-5 p-5 sm:p-6">
+                            <div>
 
-                                    {/* EMPLOYEE */}
+                                <Label className="mb-2 block">
 
-                                    <div>
+                                    Employee
 
-                                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                                            Employee
-                                        </label>
+                                    <span className="ml-1 text-red-500">
+                                        *
+                                    </span>
 
-                                        <div className="relative">
+                                </Label>
 
-                                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                                            <input
-                                                type="text"
-                                                value={employeeSearch}
-                                                onChange={(e) => {
-                                                    setEmployeeSearch(e.target.value);
-                                                    setSelectedEmployee(null);
-                                                    setShowEmployeeResults(true);
-                                                }}
-                                                onFocus={() => {
-                                                    setShowEmployeeResults(true);
-                                                }}
-                                                placeholder="Search by name or employee number..."
-                                                className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                            />
+                                <Popover
+                                    open={employeeOpen}
+                                    onOpenChange={
+                                        handleEmployeeDropdown
+                                    }
+                                >
 
-                                            {selectedEmployee && (
-                                                <CheckCircle2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-green-500" />
-                                            )}
+                                    <PopoverTrigger asChild>
 
-                                            {/* EMPLOYEE SEARCH RESULTS */}
-
-                                            {showEmployeeResults &&
-                                                employeeSearch.length >= 2 && (
-                                                    <div className="absolute left-0 right-0 top-full z-[100] mt-2 max-h-60 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-2xl">
-
-                                                        {employeeLoading ? (
-
-                                                            <div className="p-4 text-center text-sm text-slate-500">
-                                                                Searching employees...
-                                                            </div>
-
-                                                        ) : employees.length === 0 ? (
-
-                                                            <div className="p-4 text-center text-sm text-slate-500">
-                                                                No employees found
-                                                            </div>
-
-                                                        ) : (
-
-                                                            employees.map((employee) => (
-
-                                                                <button
-                                                                    key={employee.id}
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        setSelectedEmployee(employee);
-
-                                                                        setEmployeeSearch(
-                                                                            `${employee.name} (${employee.empNo})`
-                                                                        );
-
-                                                                        setShowEmployeeResults(false);
-                                                                    }}
-                                                                    className="flex w-full items-center gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-blue-50"
-                                                                >
-
-                                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-600">
-                                                                        {employee.name.charAt(0)}
-                                                                    </div>
-
-                                                                    <div className="min-w-0">
-
-                                                                        <p className="truncate text-sm font-semibold text-slate-800">
-                                                                            {employee.name}
-                                                                        </p>
-
-                                                                        <p className="text-xs text-slate-500">
-                                                                            {employee.empNo}
-                                                                            {" • "}
-                                                                            {employee.designation?.designation || "N/A"}
-                                                                        </p>
-
-                                                                        <p className="text-xs text-slate-400">
-                                                                            {employee.section?.section || "N/A"}
-                                                                        </p>
-
-                                                                    </div>
-
-                                                                </button>
-
-                                                            ))
-
-                                                        )}
-
-                                                    </div>
-                                                )}
-
-                                        </div>
-
-                                        {/* SELECTED EMPLOYEE */}
-
-                                        {selectedEmployee && (
-
-                                            <div className="mt-2 rounded-xl bg-green-50 px-4 py-3">
-
-                                                <div className="flex items-center justify-between">
-
-                                                    <div>
-
-                                                        <p className="text-sm font-semibold text-green-800">
-                                                            {selectedEmployee.name}
-                                                        </p>
-
-                                                        <p className="text-xs text-green-600">
-                                                            Employee No: {selectedEmployee.empNo}
-                                                        </p>
-
-                                                    </div>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelectedEmployee(null);
-                                                            setEmployeeSearch("");
-                                                        }}
-                                                        className="text-xs font-semibold text-red-500 hover:text-red-700"
-                                                    >
-                                                        Change
-                                                    </button>
-
-                                                </div>
-
-                                            </div>
-
-                                        )}
-
-                                    </div>
-
-                                    {/* LEAVE TYPE */}
-
-                                    <div>
-
-                                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                                            Leave Type
-                                        </label>
-
-                                        <select
-                                            className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={
+                                                employeeOpen
+                                            }
+                                            className="h-12 w-full justify-between font-normal"
                                         >
 
-                                            <option value="">
-                                                Select Leave Type
-                                            </option>
+                                            {selectedEmployee ? (
 
-                                            <option value="1">
-                                                Casual Leave
-                                            </option>
+                                                <div className="flex min-w-0 items-center gap-3">
 
-                                            <option value="2">
-                                                Medical Leave
-                                            </option>
+                                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
 
-                                            <option value="3">
-                                                Earned Leave
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-                                    {/* DATES */}
-
-                                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                                        <div>
-
-                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
-                                                From Date
-                                            </label>
-
-                                            <input
-                                                type="date"
-                                                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                            />
-
-                                        </div>
-
-                                        <div>
-
-                                            <label className="mb-2 block text-sm font-semibold text-slate-700">
-                                                To Date
-                                            </label>
-
-                                            <input
-                                                type="date"
-                                                className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                            />
-
-                                        </div>
-
-                                    </div>
-
-                                    {/* REASON */}
-
-                                    {/* <div>
-
-                                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                                            Reason
-                                        </label>
-
-                                        <textarea
-                                            rows={4}
-                                            placeholder="Enter reason for leave..."
-                                            className="w-full resize-none rounded-xl border border-slate-200 p-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                        />
-
-                                    </div> */}
-
-                                    {/* PDF NOTIFICATION */}
-
-                                    <div>
-
-                                        <label className="mb-2 block text-sm font-semibold text-slate-700">
-                                            Leave Notification
-                                            <span className="ml-2 text-xs font-normal text-slate-400">
-                                                (Optional)
-                                            </span>
-                                        </label>
-
-                                        <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-5">
-
-                                            <div className="flex flex-col items-center justify-center text-center">
-
-                                                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
-                                                    <FileText className="h-6 w-6 text-red-500" />
-                                                </div>
-
-                                                <p className="text-sm font-semibold text-slate-700">
-                                                    Attach Leave Notification
-                                                </p>
-
-                                                <p className="mt-1 text-xs text-slate-500">
-                                                    PDF only • Maximum 5 MB • Optional
-                                                </p>
-
-                                                {/* <label className="mt-4 cursor-pointer">
-
-                                                    <span className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200 hover:bg-blue-50">
-                                                        Choose PDF
-                                                    </span>
-
-                                                    <input
-                                                        type="file"
-                                                        accept="application/pdf,.pdf"
-                                                        className="hidden"
-                                                        disabled={compressingPdf}
-                                                        onChange={(e) => {
-
-                                                            const file = e.target.files?.[0];
-
-                                                            if (!file) {
-                                                                setNotificationFile(null);
-                                                                return;
-                                                            }
-
-                                                            handleNotificationFile(file);
-
-                                                            e.target.value = "";
-                                                        }}
-                                                    />
-
-                                                </label> */}
-
-                                                {compressingPdf ? (
-
-                                                    <div className="mt-4 flex items-center justify-center gap-2 text-sm font-medium text-blue-600">
-
-                                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
-
-                                                        Compressing PDF...
+                                                        <User className="size-4" />
 
                                                     </div>
+
+                                                    <div className="min-w-0 text-left">
+
+                                                        <p className="truncate font-medium text-slate-800">
+
+                                                            {
+                                                                selectedEmployee.name
+                                                            }
+
+                                                        </p>
+
+                                                        <p className="truncate text-xs text-slate-500">
+
+                                                            {
+                                                                selectedEmployee.empNo
+                                                            }
+
+                                                            {selectedEmployee.designation &&
+                                                                ` • ${selectedEmployee.designation.designation}`}
+
+                                                        </p>
+
+                                                    </div>
+
+                                                </div>
+
+                                            ) : (
+
+                                                <span className="text-slate-400">
+                                                    Select employee...
+                                                </span>
+
+                                            )}
+
+                                            <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+
+                                        </Button>
+
+                                    </PopoverTrigger>
+
+
+                                    <PopoverContent
+                                        align="start"
+                                        className="w-[--radix-popover-trigger-width] p-0"
+                                    >
+
+                                        <Command
+                                            shouldFilter={false}
+                                        >
+
+                                            {/* SEARCH */}
+
+                                            <CommandInput
+                                                placeholder="Search employee by name or employee number..."
+                                                value={
+                                                    employeeSearch
+                                                }
+                                                onValueChange={
+                                                    setEmployeeSearch
+                                                }
+                                            />
+
+
+                                            <CommandList>
+
+                                                {/* LOADING */}
+
+                                                {employeeLoading ? (
+
+                                                    <div className="flex items-center justify-center py-8">
+
+                                                        <Loader2 className="size-5 animate-spin text-slate-400" />
+
+                                                        <span className="ml-2 text-sm text-slate-500">
+                                                            Loading employees...
+                                                        </span>
+
+                                                    </div>
+
+                                                ) : employees.length ===
+                                                    0 ? (
+
+                                                    <CommandEmpty>
+
+                                                        <div className="py-4 text-center">
+
+                                                            <Search className="mx-auto size-6 text-slate-300" />
+
+                                                            <p className="mt-2 text-sm font-medium text-slate-600">
+                                                                No employees found
+                                                            </p>
+
+                                                            <p className="mt-1 text-xs text-slate-400">
+                                                                Try another search or filter.
+                                                            </p>
+
+                                                        </div>
+
+                                                    </CommandEmpty>
 
                                                 ) : (
 
-                                                    <label className="mt-4 cursor-pointer">
+                                                    <CommandGroup
+                                                        heading={
+                                                            employeeMeta.total >
+                                                                0
+                                                                ? `${employeeMeta.total.toLocaleString()} Employees`
+                                                                : "Employees"
+                                                        }
+                                                    >
 
-                                                        <span className="inline-flex h-10 items-center rounded-xl bg-white px-4 text-sm font-semibold text-blue-600 shadow-sm ring-1 ring-slate-200 hover:bg-blue-50">
-                                                            Choose PDF
-                                                        </span>
+                                                        {employees.map(
+                                                            (employee) => {
 
-                                                        <input
-                                                            type="file"
-                                                            accept="application/pdf,.pdf"
-                                                            className="hidden"
-                                                            disabled={compressingPdf}
-                                                            onChange={(e) => {
+                                                                const isSelected =
+                                                                    selectedEmployee?.id ===
+                                                                    employee.id;
 
-                                                                const file =
-                                                                    e.target.files?.[0];
 
-                                                                if (!file) {
-                                                                    setNotificationFile(null);
-                                                                    return;
-                                                                }
+                                                                return (
 
-                                                                handleNotificationFile(file);
+                                                                    <CommandItem
+                                                                        key={
+                                                                            employee.id
+                                                                        }
+                                                                        value={`${employee.empNo} ${employee.name}`}
+                                                                        onSelect={() =>
+                                                                            handleEmployeeSelect(
+                                                                                employee
+                                                                            )
+                                                                        }
+                                                                        className="cursor-pointer py-3"
+                                                                    >
 
-                                                                // Allow selecting the same file again
-                                                                e.target.value = "";
+                                                                        <Check
+                                                                            className={`mr-2 size-4 shrink-0 ${isSelected
+                                                                                ? "opacity-100"
+                                                                                : "opacity-0"
+                                                                                }`}
+                                                                        />
 
-                                                            }}
-                                                        />
 
-                                                    </label>
+                                                                        <div className="flex min-w-0 flex-1 items-center gap-3">
+
+                                                                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
+
+                                                                                <User className="size-4" />
+
+                                                                            </div>
+
+
+                                                                            <div className="min-w-0">
+
+                                                                                <p className="truncate font-medium text-slate-800">
+
+                                                                                    {
+                                                                                        employee.name
+                                                                                    }
+
+                                                                                </p>
+
+
+                                                                                <p className="truncate text-xs text-slate-500">
+
+                                                                                    {
+                                                                                        employee.empNo
+                                                                                    }
+
+                                                                                    {employee.designation &&
+                                                                                        ` • ${employee.designation.designation}`}
+
+                                                                                    {employee.section &&
+                                                                                        ` • ${employee.section.section}`}
+
+                                                                                </p>
+
+                                                                            </div>
+
+                                                                        </div>
+
+                                                                    </CommandItem>
+
+                                                                );
+
+                                                            }
+                                                        )}
+
+                                                    </CommandGroup>
 
                                                 )}
 
-                                                {notificationFile && !compressingPdf && (
+                                            </CommandList>
 
-                                                    <div className="mt-4 w-full rounded-xl border border-slate-200 bg-white p-4">
 
-                                                        <div className="flex items-center justify-between gap-3">
+                                            {/* PAGINATION */}
 
-                                                            <div className="flex min-w-0 items-center gap-3">
+                                            {!employeeLoading &&
+                                                employeeMeta.totalPages >
+                                                1 && (
 
-                                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-red-50">
-                                                                    <FileText className="h-5 w-5 text-red-500" />
-                                                                </div>
+                                                    <div className="flex items-center justify-between border-t bg-slate-50 px-3 py-2">
 
-                                                                <div className="min-w-0">
+                                                        <span className="text-xs text-slate-500">
 
-                                                                    <p className="truncate text-sm font-semibold text-slate-700">
-                                                                        {notificationFile.name}
-                                                                    </p>
+                                                            Page{" "}
+                                                            {
+                                                                employeePage
+                                                            }{" "}
+                                                            of{" "}
+                                                            {
+                                                                employeeMeta.totalPages
+                                                            }
 
-                                                                    <p className="text-xs text-green-600">
-                                                                        Compressed •{" "}
-                                                                        {(
-                                                                            notificationFile.size /
-                                                                            1024 /
-                                                                            1024
-                                                                        ).toFixed(2)}{" "}
-                                                                        MB
-                                                                    </p>
+                                                        </span>
 
-                                                                </div>
 
-                                                            </div>
+                                                        <div className="flex gap-1">
 
-                                                            <button
+                                                            <Button
                                                                 type="button"
-                                                                onClick={() =>
-                                                                    setNotificationFile(null)
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="size-8"
+                                                                disabled={
+                                                                    employeePage <=
+                                                                    1
                                                                 }
-                                                                className="shrink-0 text-xs font-semibold text-red-500 hover:text-red-700"
+                                                                onClick={
+                                                                    handleEmployeePrevious
+                                                                }
                                                             >
-                                                                Remove
-                                                            </button>
+
+                                                                <ChevronLeft className="size-4" />
+
+                                                            </Button>
+
+
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="size-8"
+                                                                disabled={
+                                                                    employeePage >=
+                                                                    employeeMeta.totalPages
+                                                                }
+                                                                onClick={
+                                                                    handleEmployeeNext
+                                                                }
+                                                            >
+
+                                                                <ChevronRight className="size-4" />
+
+                                                            </Button>
 
                                                         </div>
 
@@ -1324,53 +1791,504 @@ export default function LeaveManagement() {
 
                                                 )}
 
-                                            </div>
+                                        </Command>
+
+                                    </PopoverContent>
+
+                                </Popover>
+
+
+                                {/* SELECTED EMPLOYEE */}
+
+                                {selectedEmployee && (
+
+                                    <div className="mt-3 flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
+
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+
+                                            <User className="size-5" />
 
                                         </div>
+
+
+                                        <div className="min-w-0 flex-1">
+
+                                            <p className="truncate text-sm font-semibold text-blue-900">
+
+                                                {
+                                                    selectedEmployee.name
+                                                }
+
+                                            </p>
+
+
+                                            <p className="truncate text-xs text-blue-700">
+
+                                                {
+                                                    selectedEmployee.empNo
+                                                }
+
+                                                {selectedEmployee.designation &&
+                                                    ` • ${selectedEmployee.designation.designation}`}
+
+                                                {selectedEmployee.section &&
+                                                    ` • ${selectedEmployee.section.section}`}
+
+                                            </p>
+
+                                        </div>
+
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setSelectedEmployee(
+                                                    null
+                                                )
+                                            }
+                                            className="rounded-md p-1 text-blue-600 hover:bg-blue-100"
+                                        >
+
+                                            <X className="size-4" />
+
+                                        </button>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+
+                            {/* CLEAR FILTERS */}
+
+                            {(selectedDesignation ||
+                                selectedSection ||
+                                employeeSearch) && (
+
+                                    <div className="flex justify-end">
+
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={
+                                                clearFilters
+                                            }
+                                        >
+
+                                            Clear Filters
+
+                                        </Button>
+
+                                    </div>
+
+                                )}
+
+                        </CardContent>
+
+                    </Card>
+
+
+                    {/* ==================================================
+              LEAVE DETAILS
+          ================================================== */}
+
+                    <Card>
+
+                        <CardHeader>
+
+                            <CardTitle>
+                                Leave Details
+                            </CardTitle>
+
+                            <CardDescription>
+                                Enter the leave information.
+                            </CardDescription>
+
+                        </CardHeader>
+
+
+                        <CardContent className="space-y-5">
+
+
+                            {/* LEAVE TYPE */}
+
+                            <div>
+
+                                <Label className="mb-2 block">
+
+                                    Leave Type
+
+                                    <span className="ml-1 text-red-500">
+                                        *
+                                    </span>
+
+                                </Label>
+
+
+                                <Select
+                                    value={
+                                        selectedLeaveType
+                                    }
+                                    onValueChange={
+                                        setSelectedLeaveType
+                                    }
+                                >
+
+                                    <SelectTrigger className="h-11">
+
+                                        <SelectValue
+                                            placeholder="Select leave type"
+                                        />
+
+                                    </SelectTrigger>
+
+
+                                    <SelectContent>
+
+                                        {leaveTypes.map(
+                                            (leaveType) => (
+
+                                                <SelectItem
+                                                    key={
+                                                        leaveType.id
+                                                    }
+                                                    value={String(
+                                                        leaveType.id
+                                                    )}
+                                                >
+
+                                                    {
+                                                        leaveType.name
+                                                    }
+
+                                                </SelectItem>
+
+                                            )
+                                        )}
+
+                                    </SelectContent>
+
+                                </Select>
+
+                            </div>
+
+
+                            {/* DATES */}
+
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+
+                                {/* FROM DATE */}
+
+                                <div>
+
+                                    <Label className="mb-2 block">
+
+                                        From Date
+
+                                        <span className="ml-1 text-red-500">
+                                            *
+                                        </span>
+
+                                    </Label>
+
+
+                                    <div className="relative">
+
+                                        <CalendarDays className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+
+                                        <Input
+                                            type="date"
+                                            value={
+                                                fromDate
+                                            }
+                                            onChange={(
+                                                event
+                                            ) =>
+                                                setFromDate(
+                                                    event.target.value
+                                                )
+                                            }
+                                            className="h-11 pl-10"
+                                        />
 
                                     </div>
 
                                 </div>
 
+
+                                {/* TO DATE */}
+
+                                <div>
+
+                                    <Label className="mb-2 block">
+
+                                        To Date
+
+                                        <span className="ml-1 text-red-500">
+                                            *
+                                        </span>
+
+                                    </Label>
+
+
+                                    <div className="relative">
+
+                                        <CalendarDays className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+
+                                        <Input
+                                            type="date"
+                                            value={
+                                                isCasualLeave
+                                                    ? fromDate
+                                                    : toDate
+                                            }
+                                            min={
+                                                fromDate ||
+                                                undefined
+                                            }
+                                            disabled={
+                                                isCasualLeave
+                                            }
+                                            onChange={(
+                                                event
+                                            ) =>
+                                                setToDate(
+                                                    event.target.value
+                                                )
+                                            }
+                                            className="h-11 pl-10"
+                                        />
+
+                                    </div>
+
+
+                                    {isCasualLeave && (
+
+                                        <p className="mt-2 text-xs text-amber-600">
+
+                                            Casual Leave can only
+                                            be marked for one day.
+
+                                        </p>
+
+                                    )}
+
+                                </div>
+
                             </div>
 
-                            {/* ============================= */}
-                            {/* FIXED FOOTER */}
-                            {/* ============================= */}
 
-                            <div className="flex shrink-0 items-center justify-end gap-3 border-t border-slate-200 bg-white px-5 py-4 sm:px-6">
+                            {/* REASON */}
 
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="h-10 rounded-xl px-5"
-                                    onClick={() =>
-                                        setShowMarkLeave(false)
+                            <div>
+
+                                <Label className="mb-2 block">
+                                    Reason
+                                </Label>
+
+                                <Textarea
+                                    value={
+                                        reason
                                     }
-                                >
-                                    Cancel
-                                </Button>
-
-                                <Button
-                                    type="button"
-                                    className="h-10 rounded-xl bg-blue-600 px-6 hover:bg-blue-700"
-                                    onClick={() => {
-                                        // Submit API
-                                    }}
-                                >
-                                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                                    Mark Leave
-                                </Button>
+                                    onChange={(
+                                        event
+                                    ) =>
+                                        setReason(
+                                            event.target.value
+                                        )
+                                    }
+                                    placeholder="Enter leave reason..."
+                                    rows={4}
+                                />
 
                             </div>
 
-                        </div>
+
+                            {/* ==================================================
+                  PDF NOTIFICATION
+              ================================================== */}
+
+                            <div>
+
+                                <Label className="mb-2 block">
+
+                                    Leave Notification
+
+                                    <span className="ml-2 text-xs font-normal text-slate-400">
+                                        Optional
+                                    </span>
+
+                                </Label>
+
+
+                                {!notificationFile ? (
+
+                                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 transition hover:border-blue-400 hover:bg-blue-50">
+
+                                        <div className="flex size-12 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+
+                                            <FileText className="size-6" />
+
+                                        </div>
+
+
+                                        <p className="mt-3 font-medium text-slate-700">
+
+                                            Attach notification PDF
+
+                                        </p>
+
+
+                                        <p className="mt-1 text-xs text-slate-500">
+
+                                            PDF only, maximum 10 MB
+
+                                        </p>
+
+
+                                        <input
+                                            type="file"
+                                            accept="application/pdf,.pdf"
+                                            className="hidden"
+                                            onChange={
+                                                handleFileChange
+                                            }
+                                        />
+
+                                    </label>
+
+                                ) : (
+
+                                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4">
+
+                                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
+
+                                            <FileText className="size-5" />
+
+                                        </div>
+
+
+                                        <div className="min-w-0 flex-1">
+
+                                            <p className="truncate text-sm font-medium text-slate-800">
+
+                                                {
+                                                    notificationFile.name
+                                                }
+
+                                            </p>
+
+
+                                            <p className="mt-1 text-xs text-slate-500">
+
+                                                {(
+                                                    notificationFile.size /
+                                                    1024 /
+                                                    1024
+                                                ).toFixed(2)}{" "}
+                                                MB
+
+                                            </p>
+
+                                        </div>
+
+
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={
+                                                removeNotificationFile
+                                            }
+                                        >
+
+                                            <X className="size-4" />
+
+                                        </Button>
+
+                                    </div>
+
+                                )}
+
+                            </div>
+
+                        </CardContent>
+
+                    </Card>
+
+
+                    {/* ==================================================
+              ACTION BUTTONS
+          ================================================== */}
+
+                    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={
+                                submitting
+                            }
+                            onClick={() => {
+
+                                resetForm();
+
+                                setErrorMessage("");
+
+                                setSuccessMessage("");
+
+                            }}
+                        >
+
+                            Reset
+
+                        </Button>
+
+
+                        <Button
+                            type="submit"
+                            disabled={
+                                submitting ||
+                                !selectedEmployee
+                            }
+                            className="min-w-[160px]"
+                        >
+
+                            {submitting ? (
+
+                                <>
+
+                                    <Loader2 className="mr-2 size-4 animate-spin" />
+
+                                    Marking Leave...
+
+                                </>
+
+                            ) : (
+
+                                <>
+
+                                    <CalendarDays className="mr-2 size-4" />
+
+                                    Mark Leave
+
+                                </>
+
+                            )}
+
+                        </Button>
 
                     </div>
 
-                </div>
-            )}
+                </form>
+
+            </div>
 
         </div>
+
     );
+
 }
