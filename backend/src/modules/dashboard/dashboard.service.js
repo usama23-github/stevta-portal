@@ -128,6 +128,27 @@ export const getAttendanceDashboard = async (date = new Date()) => {
     const onLeave = leavesToday.length;
 
     // =====================================================
+    // ATTENDANCE LOOKUP
+    // =====================================================
+
+    const attendanceMap = new Map();
+
+    todayAttendance.forEach((attendance) => {
+        attendanceMap.set(
+            attendance.empNo,
+            attendance
+        );
+    });
+
+    // =====================================================
+    // LEAVE LOOKUP
+    // =====================================================
+
+    const leaveStaffIds = new Set(
+        leavesToday.map((leave) => leave.staffId)
+    );
+
+    // =====================================================
     // 5. SECTION-WISE DATA
     // =====================================================
 
@@ -293,23 +314,6 @@ export const getAttendanceDashboard = async (date = new Date()) => {
                     : 0,
         };
     });
-
-    // Create attendance lookup by employee number
-
-    const attendanceMap = new Map();
-
-    todayAttendance.forEach((attendance) => {
-        attendanceMap.set(
-            attendance.empNo,
-            attendance
-        );
-    });
-
-    // Create leave lookup by staff ID
-
-    const leaveStaffIds = new Set(
-        leavesToday.map((leave) => leave.staffId)
-    );
 
     const sectionWise = sections.map((section) => {
         const total = section.staff.length;
