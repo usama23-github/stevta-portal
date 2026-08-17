@@ -60,3 +60,77 @@ export const getAllSectionsService = async (
     },
   };
 };
+
+export const updateSectionDepartmentService = async ({
+    sectionId,
+    departmentId,
+}) => {
+    // Check section exists
+    const section = await prisma.section.findUnique({
+        where: {
+            id: Number(sectionId),
+        },
+        select: {
+            id: true,
+            section: true,
+            postingPlaceId: true,
+        },
+    });
+
+    if (!section) {
+        throw new Error("Section not found");
+    }
+
+    // Check department exists and belongs to same posting place
+    const department = await prisma.department.findFirst({
+        where: {
+            id: Number(departmentId),
+            postingPlaceId: section.postingPlaceId,
+        },
+        select: {
+            id: true,
+            department: true,
+            postingPlaceId: true,
+        },
+    });
+
+    if (!department) {
+        throw new Error(
+            "Department not found or does not belong to the section's posting place"
+        );
+    }
+
+    // Update section
+    const updatedSection = await prisma.section.update({
+        where: {
+            id: Number(sectionId),
+        },
+        data: {
+            departmentId: Number(departmentId),
+        },
+        select: {
+            id: true,
+            section: true,
+            postingPlaceId: true,
+            departmentId: true,
+            createdAt: true,
+            updatedAt: true,
+
+            postingPlace: {
+                select: {
+                    id: true,
+                    postingPlace: true,
+                },
+            },
+
+            department: {
+                select: {
+                    id: true,
+                    department: true,
+                },
+            },
+        },
+    });
+
+    return updatedSection;
+};
