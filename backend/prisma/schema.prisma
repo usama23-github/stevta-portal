@@ -31,11 +31,11 @@ model PostingPlace {
 // =========================
 
 model Section {
-  id              Int      @id @default(autoincrement())
+  id              Int              @id @default(autoincrement())
   section         String
 
   postingPlaceId  Int
-  postingPlace    PostingPlace @relation(fields: [postingPlaceId], references: [id])
+  postingPlace    PostingPlace     @relation(fields: [postingPlaceId], references: [id])
 
   departmentId    Int?
   department      Department?      @relation(fields: [departmentId], references: [id])
@@ -44,11 +44,12 @@ model Section {
 
   leave           Leave[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
-  @@unique([section, postingPlaceId])
+  @@unique([section, postingPlaceId, departmentId])
   @@index([postingPlaceId])
+  @@index([departmentId])
 }
 
 // =========================
