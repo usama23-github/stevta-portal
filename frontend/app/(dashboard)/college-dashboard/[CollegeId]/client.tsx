@@ -263,10 +263,10 @@ const attendanceColors = [
 ];
 
 const holidays = [
-  {
-    title: "Independence Day",
-    date: "14th August, 2026",
-  },
+  // {
+  //   title: "Independence Day",
+  //   date: "14th August, 2026",
+  // },
   {
     title: "Quaid-e-Azam Day",
     date: "25th December, 2026",
@@ -313,6 +313,18 @@ type SectionAttendance = {
   absencePercentage: number;
 };
 
+type DepartmentAttendance = {
+  departmentId: number;
+  department: string;
+  total: number;
+  present: number;
+  absent: number;
+  onLeave: number;
+  lateCheckIn: number;
+  earlyCheckout: number;
+  absencePercentage: number;
+};
+
 type Last7DayAttendance = {
   date: string;
   total: number;
@@ -324,6 +336,7 @@ type DashboardResponse = {
   success: boolean;
   data: {
     attendance: DashboardAttendance;
+    departmentWise: DepartmentAttendance[];
     sectionWise: SectionAttendance[];
     last7Days: Last7DayAttendance[];
   };
@@ -374,7 +387,21 @@ export const CollegeIdClient = () => {
         );
       }
 
-      setDashboardData(result.data);
+      const updatedData = {
+        ...result.data,
+
+        departmentWise: result.data.departmentWise.map((item) => ({
+          ...item,
+          department:
+            item.department === "Industrial Linkages / Public Private Partnership"
+              ? "IL / PPP"
+              : item.department === "Management Information System (MIS)" ? "MIS"
+                : item.department === "Managing Director Secretariat" ? "MD Secretariat"
+                  : item.department,
+        })),
+      };
+
+      setDashboardData(updatedData);
 
     } catch (error) {
       console.error(
@@ -413,6 +440,7 @@ export const CollegeIdClient = () => {
 
   const {
     attendance,
+    departmentWise,
     sectionWise,
     last7Days,
   } = dashboardData;
@@ -755,16 +783,16 @@ export const CollegeIdClient = () => {
               <div className="mb-4">
 
                 <h2 className="text-lg font-bold text-slate-800">
-                  Today's Attendance by Section
+                  Today's Attendance by Department
                 </h2>
 
                 <p className="text-sm text-slate-500">
-                  Total employees and absent employees by section
+                  Total employees and absent employees by department
                 </p>
 
               </div>
 
-              <div className="h-[480px]">
+              <div className="h-[350px]">
 
                 <ResponsiveContainer
                   width="100%"
@@ -772,7 +800,7 @@ export const CollegeIdClient = () => {
                 >
 
                   <BarChart
-                    data={sectionWise}
+                    data={departmentWise}
                     layout="vertical"
                     margin={{
                       top: 10,
@@ -794,7 +822,7 @@ export const CollegeIdClient = () => {
 
                     <YAxis
                       type="category"
-                      dataKey="section"
+                      dataKey="department"
                       width={140}
                       tick={{
                         fontSize: 10,
