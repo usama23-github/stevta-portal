@@ -158,7 +158,7 @@ export const getAttendanceDashboard = async (date = new Date()) => {
             id: true,
             department: true,
 
-            sections: {
+            section: {
                 select: {
                     id: true,
                     section: true,
@@ -185,7 +185,7 @@ export const getAttendanceDashboard = async (date = new Date()) => {
 
         const staffMap = new Map();
 
-        department.sections.forEach((section) => {
+        department.section.forEach((section) => {
             section.staff.forEach((staff) => {
                 staffMap.set(staff.id, staff);
             });
