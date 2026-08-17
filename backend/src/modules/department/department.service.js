@@ -35,14 +35,13 @@ export const createDepartmentService = async ({
     return newDepartment;
 };
 
-export const getAllDepartmentsService = async (
-    query
-) => {
+export const getAllDepartmentsService = async (query) => {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
 
     const search = query.search?.trim() || "";
+
     const postingPlaceId = query.postingPlaceId
         ? Number(query.postingPlaceId)
         : undefined;
@@ -72,13 +71,13 @@ export const getAllDepartmentsService = async (
                 },
             },
             orderBy: {
-                postingPlace: "asc",
+                department: "asc",
             },
             skip,
             take: limit,
         }),
 
-        prisma.postingPlace.count({
+        prisma.department.count({
             where,
         }),
     ]);
