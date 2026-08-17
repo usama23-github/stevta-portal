@@ -513,7 +513,7 @@ export const CollegeIdClient = () => {
 
           <div className="mb-6 overflow-hidden rounded-3xl bg-gradient-to-r from-[#0f172a] to-[#1e3a8a] shadow-xl">
 
-            <div className="flex items-center justify-between border-b border-white/10 p-4">
+            {/* <div className="flex items-center justify-between border-b border-white/10 p-4">
 
               <div />
 
@@ -527,7 +527,7 @@ export const CollegeIdClient = () => {
                 alt="STEVTA"
               />
 
-            </div>
+            </div> */}
 
             <div className="flex flex-col gap-6 p-8 md:flex-row md:items-center md:justify-between">
 
