@@ -1,7 +1,8 @@
 import express from "express";
 import {
     getAllSections,
-    updateSectionDepartment
+    updateSectionDepartment,
+    updateSectionName
 } from "./section.controller.js";
 
 const router = express.Router();
@@ -11,6 +12,10 @@ router.get("/", getAllSections);
 router.patch(
     "/:sectionId/department",
     updateSectionDepartment
+);
+router.patch(
+    "/:sectionId/name",
+    updateSectionName
 );
 
 export default router;

@@ -62,75 +62,151 @@ export const getAllSectionsService = async (
 };
 
 export const updateSectionDepartmentService = async ({
-    sectionId,
-    departmentId,
+  sectionId,
+  departmentId,
 }) => {
-    // Check section exists
-    const section = await prisma.section.findUnique({
-        where: {
-            id: Number(sectionId),
-        },
+  // Check section exists
+  const section = await prisma.section.findUnique({
+    where: {
+      id: Number(sectionId),
+    },
+    select: {
+      id: true,
+      section: true,
+      postingPlaceId: true,
+    },
+  });
+
+  if (!section) {
+    throw new Error("Section not found");
+  }
+
+  // Check department exists and belongs to same posting place
+  const department = await prisma.department.findFirst({
+    where: {
+      id: Number(departmentId),
+      postingPlaceId: section.postingPlaceId,
+    },
+    select: {
+      id: true,
+      department: true,
+      postingPlaceId: true,
+    },
+  });
+
+  if (!department) {
+    throw new Error(
+      "Department not found or does not belong to the section's posting place"
+    );
+  }
+
+  // Update section
+  const updatedSection = await prisma.section.update({
+    where: {
+      id: Number(sectionId),
+    },
+    data: {
+      departmentId: Number(departmentId),
+    },
+    select: {
+      id: true,
+      section: true,
+      postingPlaceId: true,
+      departmentId: true,
+      createdAt: true,
+      updatedAt: true,
+
+      postingPlace: {
         select: {
-            id: true,
-            section: true,
-            postingPlaceId: true,
+          id: true,
+          postingPlace: true,
         },
-    });
+      },
 
-    if (!section) {
-        throw new Error("Section not found");
-    }
-
-    // Check department exists and belongs to same posting place
-    const department = await prisma.department.findFirst({
-        where: {
-            id: Number(departmentId),
-            postingPlaceId: section.postingPlaceId,
-        },
+      department: {
         select: {
-            id: true,
-            department: true,
-            postingPlaceId: true,
+          id: true,
+          department: true,
         },
-    });
+      },
+    },
+  });
 
-    if (!department) {
-        throw new Error(
-            "Department not found or does not belong to the section's posting place"
-        );
-    }
+  return updatedSection;
+};
 
-    // Update section
-    const updatedSection = await prisma.section.update({
-        where: {
-            id: Number(sectionId),
-        },
-        data: {
-            departmentId: Number(departmentId),
-        },
+export const updateSectionNameService = async ({
+  sectionId,
+  section,
+}) => {
+  const sectionIdNumber = Number(sectionId);
+
+  // Check if section exists
+  const existingSection = await prisma.section.findUnique({
+    where: {
+      id: sectionIdNumber,
+    },
+    select: {
+      id: true,
+      section: true,
+      postingPlaceId: true,
+    },
+  });
+
+  if (!existingSection) {
+    throw new Error("Section not found");
+  }
+
+  // Check duplicate section name in the same posting place
+  const duplicateSection = await prisma.section.findFirst({
+    where: {
+      section: {
+        equals: section,
+      },
+      postingPlaceId: existingSection.postingPlaceId,
+      NOT: {
+        id: sectionIdNumber,
+      },
+    },
+  });
+
+  if (duplicateSection) {
+    throw new Error(
+      "Section with this name already exists in this posting place"
+    );
+  }
+
+  // Update section name
+  const updatedSection = await prisma.section.update({
+    where: {
+      id: sectionIdNumber,
+    },
+    data: {
+      section,
+    },
+    select: {
+      id: true,
+      section: true,
+      postingPlaceId: true,
+      departmentId: true,
+      createdAt: true,
+      updatedAt: true,
+
+      postingPlace: {
         select: {
-            id: true,
-            section: true,
-            postingPlaceId: true,
-            departmentId: true,
-            createdAt: true,
-            updatedAt: true,
-
-            postingPlace: {
-                select: {
-                    id: true,
-                    postingPlace: true,
-                },
-            },
-
-            department: {
-                select: {
-                    id: true,
-                    department: true,
-                },
-            },
+          id: true,
+          postingPlace: true,
         },
-    });
+      },
 
-    return updatedSection;
+      department: {
+        select: {
+          id: true,
+          department: true,
+        },
+      },
+    },
+  });
+
+  return updatedSection;
 };
