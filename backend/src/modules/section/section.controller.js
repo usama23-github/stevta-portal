@@ -1,7 +1,8 @@
 import {
     getAllSectionsService,
     updateSectionDepartmentService,
-    updateSectionNameService
+    updateSectionNameService,
+    getSectionsByDepartmentIdService
 } from "./section.service.js";
 
 export const getAllSections = async (
@@ -112,6 +113,54 @@ export const updateSectionName = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: error.message || "Failed to update section name",
+        });
+    }
+};
+
+export const getSectionsByDepartmentId = async (req, res) => {
+    try {
+        const { departmentId } = req.params;
+
+        if (!departmentId) {
+            return res.status(400).json({
+                success: false,
+                message: "Department ID is required",
+            });
+        }
+
+        const result = await getSectionsByDepartmentIdService(
+            departmentId
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Sections fetched successfully",
+            data: result.sections,
+            department: result.department,
+        });
+    } catch (error) {
+        console.error(
+            "Get sections by department ID error:",
+            error
+        );
+
+        if (error.message === "Invalid department ID") {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        if (error.message === "Department not found") {
+            return res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Failed to fetch sections",
         });
     }
 };

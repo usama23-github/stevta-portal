@@ -210,3 +210,57 @@ export const updateSectionNameService = async ({
 
   return updatedSection;
 };
+
+export const getSectionsByDepartmentIdService = async (departmentId) => {
+  const departmentIdNumber = Number(departmentId);
+
+  if (!departmentIdNumber || Number.isNaN(departmentIdNumber)) {
+    throw new Error("Invalid department ID");
+  }
+
+  // Check department exists
+  const department = await prisma.department.findUnique({
+    where: {
+      id: departmentIdNumber,
+    },
+    select: {
+      id: true,
+      department: true,
+      postingPlaceId: true,
+    },
+  });
+
+  if (!department) {
+    throw new Error("Department not found");
+  }
+
+  // Get sections
+  const sections = await prisma.section.findMany({
+    where: {
+      departmentId: departmentIdNumber,
+    },
+    select: {
+      id: true,
+      section: true,
+      postingPlaceId: true,
+      departmentId: true,
+      createdAt: true,
+      updatedAt: true,
+
+      postingPlace: {
+        select: {
+          id: true,
+          postingPlace: true,
+        },
+      },
+    },
+    orderBy: {
+      section: "asc",
+    },
+  });
+
+  return {
+    department,
+    sections,
+  };
+};

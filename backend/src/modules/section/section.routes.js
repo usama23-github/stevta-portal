@@ -2,12 +2,17 @@ import express from "express";
 import {
     getAllSections,
     updateSectionDepartment,
-    updateSectionName
+    updateSectionName,
+    getSectionsByDepartmentId
 } from "./section.controller.js";
 
 const router = express.Router();
 
 router.get("/", getAllSections);
+router.get(
+    "/department/:departmentId",
+    getSectionsByDepartmentId
+);
 
 router.patch(
     "/:sectionId/department",
