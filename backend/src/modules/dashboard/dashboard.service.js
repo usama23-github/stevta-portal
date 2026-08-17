@@ -149,6 +149,151 @@ export const getAttendanceDashboard = async (date = new Date()) => {
         },
     });
 
+    // =====================================================
+    // 6. DEPARTMENT-WISE DATA
+    // =====================================================
+
+    const departments = await prisma.department.findMany({
+        select: {
+            id: true,
+            department: true,
+
+            sections: {
+                select: {
+                    id: true,
+                    section: true,
+
+                    staff: {
+                        select: {
+                            id: true,
+                            empNo: true,
+                        },
+                    },
+                },
+            },
+        },
+
+        orderBy: {
+            department: "asc",
+        },
+    });
+
+    const departmentWise = departments.map((department) => {
+        // -----------------------------------------
+        // Combine all staff from department sections
+        // -----------------------------------------
+
+        const staffMap = new Map();
+
+        department.sections.forEach((section) => {
+            section.staff.forEach((staff) => {
+                staffMap.set(staff.id, staff);
+            });
+        });
+
+        const staff = Array.from(staffMap.values());
+
+        const total = staff.length;
+
+        let presentCount = 0;
+        let absentCount = 0;
+        let leaveCount = 0;
+        let lateCount = 0;
+        let earlyCount = 0;
+
+        staff.forEach((staff) => {
+
+            // -----------------------------------------
+            // Leave
+            // -----------------------------------------
+
+            if (leaveStaffIds.has(staff.id)) {
+                leaveCount++;
+            }
+
+            // -----------------------------------------
+            // Attendance
+            // -----------------------------------------
+
+            const attendance = attendanceMap.get(
+                staff.empNo
+            );
+
+            if (!attendance) {
+                return;
+            }
+
+            // -----------------------------------------
+            // Present
+            // -----------------------------------------
+
+            if (
+                attendance.attendanceStatusId ===
+                ATTENDANCE_STATUS.PRESENT
+            ) {
+                presentCount++;
+            }
+
+            // -----------------------------------------
+            // Absent
+            // -----------------------------------------
+
+            if (
+                attendance.attendanceStatusId ===
+                ATTENDANCE_STATUS.ABSENT
+            ) {
+                absentCount++;
+            }
+
+            // -----------------------------------------
+            // Late Check-in
+            // -----------------------------------------
+
+            if (
+                attendance.checkInStatusId ===
+                CHECK_IN_STATUS.LATE
+            ) {
+                lateCount++;
+            }
+
+            // -----------------------------------------
+            // Early Checkout
+            // -----------------------------------------
+
+            if (
+                attendance.checkOutStatusId ===
+                CHECK_OUT_STATUS.EARLY
+            ) {
+                earlyCount++;
+            }
+        });
+
+        return {
+            departmentId: department.id,
+
+            department: department.department,
+
+            total,
+
+            present: presentCount,
+
+            absent: absentCount,
+
+            onLeave: leaveCount,
+
+            lateCheckIn: lateCount,
+
+            earlyCheckout: earlyCount,
+
+            absencePercentage:
+                total > 0
+                    ? Number(
+                        ((absentCount / total) * 100).toFixed(1)
+                    )
+                    : 0,
+        };
+    });
+
     // Create attendance lookup by employee number
 
     const attendanceMap = new Map();
@@ -366,6 +511,9 @@ export const getAttendanceDashboard = async (date = new Date()) => {
 
         sectionWise,
 
+        departmentWise,
+
         last7Days,
     };
+
 };
