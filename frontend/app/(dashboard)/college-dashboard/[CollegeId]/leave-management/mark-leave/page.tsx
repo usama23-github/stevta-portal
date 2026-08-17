@@ -62,7 +62,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const API_URL =
     process.env.NEXT_PUBLIC_API_URL ||
-    "https://portal.stevta.gos.pk/api";
+    "https://portal.stevta.gos.pk/api/v1";
 
 
 // ======================================================
