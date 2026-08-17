@@ -62,7 +62,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const API_URL =
     process.env.NEXT_PUBLIC_API_URL ||
-    "http://localhost:5000/api";
+    "https://portal.stevta.gos.pk/api";
 
 
 // ======================================================
@@ -72,11 +72,19 @@ const API_URL =
 type Designation = {
     id: number;
     designation: string;
+    scale: {
+        scale: string;
+    }
 };
 
 type Section = {
     id: number;
     section: string;
+};
+
+type Department = {
+    id: number;
+    department: string;
 };
 
 type LeaveType = {
@@ -87,7 +95,7 @@ type LeaveType = {
 type Employee = {
     id: string;
     empNo: string;
-    name: string;
+    employeeName: string;
 
     designation?: {
         id: number;
@@ -177,6 +185,15 @@ export default function MarkLeavePage() {
     const [sectionOpen, setSectionOpen] =
         useState(false);
 
+    const [departments, setDepartments] =
+        useState<Department[]>([]);
+
+    const [selectedDepartment, setSelectedDepartment] =
+        useState<number | null>(null);
+
+    const [departmentOpen, setDepartmentOpen] =
+        useState(false);
+
 
     // ====================================================
     // LEAVE TYPES
@@ -235,7 +252,7 @@ export default function MarkLeavePage() {
 
 
     // ====================================================
-    // LOAD DESIGNATIONS, SECTIONS, LEAVE TYPES
+    // LOAD DEPARTMENTS DESIGNATIONS, SECTIONS, LEAVE TYPES
     // ====================================================
 
     const loadInitialData = async () => {
@@ -248,13 +265,18 @@ export default function MarkLeavePage() {
 
 
             const [
+                departmentResponse,
                 designationResponse,
                 sectionResponse,
                 leaveTypeResponse,
             ] = await Promise.all([
 
                 fetch(
-                    `${API_URL}/designations`
+                    `${API_URL}/department`
+                ),
+
+                fetch(
+                    `${API_URL}/designations?page=1&limit=1000`
                 ),
 
                 fetch(
@@ -267,6 +289,8 @@ export default function MarkLeavePage() {
 
             ]);
 
+            const departmentResult =
+                await departmentResponse.json();
 
             const designationResult =
                 await designationResponse.json();
@@ -277,6 +301,15 @@ export default function MarkLeavePage() {
             const leaveTypeResult =
                 await leaveTypeResponse.json();
 
+
+            if (!departmentResponse.ok) {
+
+                throw new Error(
+                    departmentResult.message ||
+                    "Failed to load departments."
+                );
+
+            }
 
             if (!designationResponse.ok) {
 
@@ -306,6 +339,10 @@ export default function MarkLeavePage() {
                 );
 
             }
+
+            setDepartments(
+                departmentResult.result.data || []
+            );
 
             setDesignations(
                 designationResult.result.data || []
@@ -396,6 +433,15 @@ export default function MarkLeavePage() {
 
             }
 
+            if (selectedDepartment) {
+
+                params.set(
+                    "departmentId",
+                    String(selectedDepartment)
+                );
+
+            }
+
 
             const response =
                 await fetch(
@@ -443,6 +489,82 @@ export default function MarkLeavePage() {
         } finally {
 
             setEmployeeLoading(false);
+
+        }
+
+    };
+
+    // ====================================================
+    // FETCH SECTIONS
+    // ====================================================
+
+    const fetchSections = async (
+        departmentId: string
+    ) => {
+
+        try {
+
+            if (departmentId === "all") {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/sections`
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to load sections."
+                    );
+
+                }
+
+                setSections(
+                    result.result.data || []
+                );
+
+            } else {
+
+                const response =
+                    await fetch(
+                        `${API_URL}/sections/department/${departmentId}`
+                    );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.message ||
+                        "Failed to load sections."
+                    );
+
+                }
+
+                setSections(
+                    result.data || []
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(error);
+
+            setErrorMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to load sections."
+            );
 
         }
 
@@ -511,6 +633,7 @@ export default function MarkLeavePage() {
         employeeSearch,
         selectedDesignation,
         selectedSection,
+        selectedDepartment
     ]);
 
 
@@ -538,6 +661,58 @@ export default function MarkLeavePage() {
         setEmployeePage(1);
 
         setEmployees([]);
+
+        if (employeeOpen) {
+
+            setTimeout(() => {
+
+                fetchEmployees(
+                    employeeSearch,
+                    1
+                );
+
+            }, 0);
+
+        }
+
+    };
+
+    // ====================================================
+    // DEPARTMENT FILTER
+    // ====================================================
+
+    const handleDepartmentChange = (
+        value: string
+    ) => {
+
+        if (value === "all") {
+
+            setSelectedDepartment(null);
+
+        } else {
+
+            setSelectedDepartment(
+                Number(value)
+            );
+
+        }
+
+
+        setEmployeePage(1);
+
+        setEmployees([]);
+
+        setSelectedSection(null);
+
+        setSections([]);
+
+        setTimeout(() => {
+
+            fetchSections(value);
+
+        }, 0);
+
+
 
         if (employeeOpen) {
 
@@ -967,6 +1142,10 @@ export default function MarkLeavePage() {
             null
         );
 
+        setSelectedDepartment(
+            null
+        );
+
         setEmployeeSearch("");
 
         setEmployeePage(1);
@@ -1189,24 +1368,23 @@ export default function MarkLeavePage() {
 
 
                             {/* ============================================
-                  DESIGNATION + SECTION
+                 DEPARTMENT + SECTION + DESIGNATION
               ============================================ */}
 
                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
-
-                                {/* DESIGNATION */}
+                                {/* DEPARTMENT */}
 
                                 <div>
 
                                     <Label className="mb-2 block">
-                                        Designation
+                                        Department
                                     </Label>
 
                                     <Popover
-                                        open={designationOpen}
+                                        open={departmentOpen}
                                         onOpenChange={
-                                            setDesignationOpen
+                                            setDepartmentOpen
                                         }
                                     >
 
@@ -1218,15 +1396,15 @@ export default function MarkLeavePage() {
                                                 className="h-11 w-full justify-between font-normal"
                                             >
 
-                                                {selectedDesignation
-                                                    ? designations.find(
+                                                {selectedDepartment
+                                                    ? departments.find(
                                                         (item) =>
                                                             item.id ===
-                                                            selectedDesignation
-                                                    )?.designation
+                                                            selectedDepartment
+                                                    )?.department
                                                     : (
                                                         <span className="text-slate-400">
-                                                            All Designations
+                                                            All Departments
                                                         </span>
                                                     )}
 
@@ -1245,26 +1423,26 @@ export default function MarkLeavePage() {
                                             <Command>
 
                                                 <CommandInput
-                                                    placeholder="Search designation..."
+                                                    placeholder="Search department..."
                                                 />
 
                                                 <CommandList>
 
                                                     <CommandEmpty>
-                                                        No designation found.
+                                                        No department found.
                                                     </CommandEmpty>
 
                                                     <CommandGroup>
 
                                                         <CommandItem
-                                                            value="all designations"
+                                                            value="all departements"
                                                             onSelect={() => {
 
-                                                                handleDesignationChange(
+                                                                handleDepartmentChange(
                                                                     "all"
                                                                 );
 
-                                                                setDesignationOpen(
+                                                                setDepartmentOpen(
                                                                     false
                                                                 );
 
@@ -1272,37 +1450,37 @@ export default function MarkLeavePage() {
                                                         >
 
                                                             <Check
-                                                                className={`mr-2 size-4 ${selectedDesignation ===
+                                                                className={`mr-2 size-4 ${selectedDepartment ===
                                                                     null
                                                                     ? "opacity-100"
                                                                     : "opacity-0"
                                                                     }`}
                                                             />
 
-                                                            All Designations
+                                                            All Departments
 
                                                         </CommandItem>
 
 
-                                                        {designations.map(
-                                                            (designation) => (
+                                                        {departments.map(
+                                                            (department) => (
 
                                                                 <CommandItem
                                                                     key={
-                                                                        designation.id
+                                                                        department.id
                                                                     }
                                                                     value={
-                                                                        designation.designation
+                                                                        department.department
                                                                     }
                                                                     onSelect={() => {
 
-                                                                        handleDesignationChange(
+                                                                        handleDepartmentChange(
                                                                             String(
-                                                                                designation.id
+                                                                                department.id
                                                                             )
                                                                         );
 
-                                                                        setDesignationOpen(
+                                                                        setDepartmentOpen(
                                                                             false
                                                                         );
 
@@ -1310,15 +1488,15 @@ export default function MarkLeavePage() {
                                                                 >
 
                                                                     <Check
-                                                                        className={`mr-2 size-4 ${selectedDesignation ===
-                                                                            designation.id
+                                                                        className={`mr-2 size-4 ${selectedDepartment ===
+                                                                            department.id
                                                                             ? "opacity-100"
                                                                             : "opacity-0"
                                                                             }`}
                                                                     />
 
                                                                     {
-                                                                        designation.designation
+                                                                        department.department
                                                                     }
 
                                                                 </CommandItem>
@@ -1337,7 +1515,6 @@ export default function MarkLeavePage() {
                                     </Popover>
 
                                 </div>
-
 
                                 {/* SECTION */}
 
@@ -1482,6 +1659,150 @@ export default function MarkLeavePage() {
 
                                 </div>
 
+
+                                {/* DESIGNATION */}
+
+                                <div>
+
+                                    <Label className="mb-2 block">
+                                        Designation
+                                    </Label>
+
+                                    <Popover
+                                        open={designationOpen}
+                                        onOpenChange={
+                                            setDesignationOpen
+                                        }
+                                    >
+
+                                        <PopoverTrigger asChild>
+
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="h-11 w-full justify-between font-normal"
+                                            >
+
+                                                {selectedDesignation
+                                                    ? designations.find(
+                                                        (item) =>
+                                                            item.id ===
+                                                            selectedDesignation
+                                                    )?.designation
+                                                    : (
+                                                        <span className="text-slate-400">
+                                                            All Designations
+                                                        </span>
+                                                    )}
+
+                                                <ChevronsUpDown className="size-4 opacity-50" />
+
+                                            </Button>
+
+                                        </PopoverTrigger>
+
+
+                                        <PopoverContent
+                                            align="start"
+                                            className="w-[--radix-popover-trigger-width] p-0"
+                                        >
+
+                                            <Command>
+
+                                                <CommandInput
+                                                    placeholder="Search designation..."
+                                                />
+
+                                                <CommandList>
+
+                                                    <CommandEmpty>
+                                                        No designation found.
+                                                    </CommandEmpty>
+
+                                                    <CommandGroup>
+
+                                                        <CommandItem
+                                                            value="all designations"
+                                                            onSelect={() => {
+
+                                                                handleDesignationChange(
+                                                                    "all"
+                                                                );
+
+                                                                setDesignationOpen(
+                                                                    false
+                                                                );
+
+                                                            }}
+                                                        >
+
+                                                            <Check
+                                                                className={`mr-2 size-4 ${selectedDesignation ===
+                                                                    null
+                                                                    ? "opacity-100"
+                                                                    : "opacity-0"
+                                                                    }`}
+                                                            />
+
+                                                            All Designations
+
+                                                        </CommandItem>
+
+
+                                                        {designations.map(
+                                                            (designation) => (
+
+                                                                <CommandItem
+                                                                    key={
+                                                                        designation.id
+                                                                    }
+                                                                    value={
+                                                                        designation.designation + " " + designation.scale.scale
+                                                                    }
+                                                                    onSelect={() => {
+
+                                                                        handleDesignationChange(
+                                                                            String(
+                                                                                designation.id
+                                                                            )
+                                                                        );
+
+                                                                        setDesignationOpen(
+                                                                            false
+                                                                        );
+
+                                                                    }}
+                                                                >
+
+                                                                    <Check
+                                                                        className={`mr-2 size-4 ${selectedDesignation ===
+                                                                            designation.id
+                                                                            ? "opacity-100"
+                                                                            : "opacity-0"
+                                                                            }`}
+                                                                    />
+
+                                                                    {
+                                                                        designation.designation + " " + designation.scale.scale
+                                                                    }
+
+                                                                </CommandItem>
+
+                                                            )
+                                                        )}
+
+                                                    </CommandGroup>
+
+                                                </CommandList>
+
+                                            </Command>
+
+                                        </PopoverContent>
+
+                                    </Popover>
+
+                                </div>
+
                             </div>
 
 
@@ -1536,7 +1857,7 @@ export default function MarkLeavePage() {
                                                         <p className="truncate font-medium text-slate-800">
 
                                                             {
-                                                                selectedEmployee.name
+                                                                selectedEmployee.employeeName
                                                             }
 
                                                         </p>
@@ -1548,7 +1869,7 @@ export default function MarkLeavePage() {
                                                             }
 
                                                             {selectedEmployee.designation &&
-                                                                ` • ${selectedEmployee.designation.designation}`}
+                                                                ` • ${selectedEmployee.designation}`}
 
                                                         </p>
 
@@ -1655,7 +1976,7 @@ export default function MarkLeavePage() {
                                                                         key={
                                                                             employee.id
                                                                         }
-                                                                        value={`${employee.empNo} ${employee.name}`}
+                                                                        value={`${employee.empNo} ${employee.employeeName}`}
                                                                         onSelect={() =>
                                                                             handleEmployeeSelect(
                                                                                 employee
@@ -1686,7 +2007,7 @@ export default function MarkLeavePage() {
                                                                                 <p className="truncate font-medium text-slate-800">
 
                                                                                     {
-                                                                                        employee.name
+                                                                                        employee.employeeName
                                                                                     }
 
                                                                                 </p>
@@ -1699,10 +2020,7 @@ export default function MarkLeavePage() {
                                                                                     }
 
                                                                                     {employee.designation &&
-                                                                                        ` • ${employee.designation.designation}`}
-
-                                                                                    {employee.section &&
-                                                                                        ` • ${employee.section.section}`}
+                                                                                        ` • ${employee.designation}`}
 
                                                                                 </p>
 
@@ -1816,7 +2134,7 @@ export default function MarkLeavePage() {
                                             <p className="truncate text-sm font-semibold text-blue-900">
 
                                                 {
-                                                    selectedEmployee.name
+                                                    selectedEmployee.employeeName
                                                 }
 
                                             </p>
@@ -1829,10 +2147,7 @@ export default function MarkLeavePage() {
                                                 }
 
                                                 {selectedEmployee.designation &&
-                                                    ` • ${selectedEmployee.designation.designation}`}
-
-                                                {selectedEmployee.section &&
-                                                    ` • ${selectedEmployee.section.section}`}
+                                                    ` • ${selectedEmployee.designation}`}
 
                                             </p>
 
@@ -1864,6 +2179,7 @@ export default function MarkLeavePage() {
 
                             {(selectedDesignation ||
                                 selectedSection ||
+                                selectedDepartment ||
                                 employeeSearch) && (
 
                                     <div className="flex justify-end">
