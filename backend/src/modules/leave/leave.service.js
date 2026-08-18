@@ -852,21 +852,21 @@ export const getLeaves = async ({
                         designation: {
                             select: {
                                 id: true,
-                                name: true,
+                                designation: true,
                             },
                         },
 
                         postingPlace: {
                             select: {
                                 id: true,
-                                name: true,
+                                postingPlace: true,
                             },
                         },
 
                         section: {
                             select: {
                                 id: true,
-                                name: true,
+                                section: true,
                             },
                         },
                     },
@@ -875,14 +875,14 @@ export const getLeaves = async ({
                 leaveType: {
                     select: {
                         id: true,
-                        name: true,
+                        leaveType: true,
                     },
                 },
 
                 postingPlace: {
                     select: {
                         id: true,
-                        name: true,
+                        postingPlace: true,
                     },
                 },
 
@@ -896,14 +896,14 @@ export const getLeaves = async ({
                 designation: {
                     select: {
                         id: true,
-                        name: true,
+                        designation: true,
                     },
                 },
 
                 section: {
                     select: {
                         id: true,
-                        name: true,
+                        section: true,
                     },
                 },
 
