@@ -875,7 +875,7 @@ export const getLeaves = async ({
                 leaveType: {
                     select: {
                         id: true,
-                        leaveType: true,
+                        name: true,
                     },
                 },
 
