@@ -99,7 +99,7 @@ export const getLeaves = async (
         "https://portal.stevta.gos.pk/api/v1";
 
     const response = await fetch(
-        `${apiUrl}/api/leaves?${params.toString()}`,
+        `${apiUrl}/leave?${params.toString()}`,
         {
             method: "GET",
             headers: {

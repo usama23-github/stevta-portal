@@ -4,6 +4,7 @@ import {
     createLeaveType,
     getAllLeaveTypes,
     markLeave,
+    getLeavesController,
 } from "./leave.controller.js";
 
 import {
@@ -31,6 +32,11 @@ router.post(
 router.post(
     "/types",
     createLeaveType
+);
+
+router.get(
+    "/",
+    getLeavesController
 );
 
 // GET /api/leave/types

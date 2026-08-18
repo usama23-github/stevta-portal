@@ -750,3 +750,195 @@ export const markLeaveService = async ({
         throw error;
     }
 };
+
+import prisma from "../../prisma/prisma.js";
+
+export const getLeaves = async ({
+    page = 1,
+    limit = 10,
+    search = "",
+    staffId,
+    leaveTypeId,
+    postingPlaceId,
+    regionId,
+    designationId,
+    sectionId,
+    fromDate,
+    toDate,
+}) => {
+    const skip = (page - 1) * limit;
+
+    const where = {};
+
+    // Employee
+    if (staffId) {
+        where.staffId = staffId;
+    }
+
+    // Leave type
+    if (leaveTypeId) {
+        where.leaveTypeId = Number(leaveTypeId);
+    }
+
+    // Posting place
+    if (postingPlaceId) {
+        where.postingPlaceId = Number(postingPlaceId);
+    }
+
+    // Region
+    if (regionId) {
+        where.regionId = Number(regionId);
+    }
+
+    // Designation
+    if (designationId) {
+        where.designationId = Number(designationId);
+    }
+
+    // Section
+    if (sectionId) {
+        where.sectionId = Number(sectionId);
+    }
+
+    // Search employee by name or employee number
+    if (search) {
+        where.staff = {
+            OR: [
+                {
+                    name: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    empNo: {
+                        contains: search,
+                        mode: "insensitive",
+                    },
+                },
+            ],
+        };
+    }
+
+    // Date range
+    if (fromDate || toDate) {
+        where.fromDate = {};
+
+        if (fromDate) {
+            where.fromDate.gte = new Date(fromDate);
+        }
+
+        if (toDate) {
+            where.fromDate.lte = new Date(toDate);
+        }
+    }
+
+    const [leaves, total] = await Promise.all([
+        prisma.leave.findMany({
+            where,
+            skip,
+            take: limit,
+
+            orderBy: {
+                createdAt: "desc",
+            },
+
+            include: {
+                staff: {
+                    select: {
+                        id: true,
+                        empNo: true,
+                        name: true,
+                        department: true,
+
+                        designation: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+
+                        postingPlace: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+
+                        section: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                },
+
+                leaveType: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+
+                postingPlace: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+
+                region: {
+                    select: {
+                        id: true,
+                        region: true,
+                    },
+                },
+
+                designation: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+
+                section: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                    },
+                },
+
+                documents: {
+                    select: {
+                        id: true,
+                        fileName: true,
+                        filePath: true,
+                        uploadedAt: true,
+                    },
+                },
+            },
+        }),
+
+        prisma.leave.count({
+            where,
+        }),
+    ]);
+
+    return {
+        data: leaves,
+        meta: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+};

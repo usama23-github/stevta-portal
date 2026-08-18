@@ -2,6 +2,7 @@ import {
     createLeaveTypeService,
     getAllLeaveTypesService,
     markLeaveService,
+    getLeaves,
 } from "./leave.service.js";
 
 
@@ -239,6 +240,62 @@ export const markLeave = async (
                 error.message ||
                 "Failed to mark leave.",
 
+        });
+    }
+};
+
+export const getLeavesController = async (req, res) => {
+    try {
+        const {
+            page = "1",
+            limit = "10",
+            search = "",
+            staffId,
+            leaveTypeId,
+            postingPlaceId,
+            regionId,
+            designationId,
+            sectionId,
+            fromDate,
+            toDate,
+        } = req.query;
+
+        const pageNumber = Math.max(
+            parseInt(page, 10) || 1,
+            1
+        );
+
+        const limitNumber = Math.min(
+            Math.max(parseInt(limit, 10) || 10, 1),
+            100
+        );
+
+        const result = await getLeaves({
+            page: pageNumber,
+            limit: limitNumber,
+            search,
+            staffId,
+            leaveTypeId,
+            postingPlaceId,
+            regionId,
+            designationId,
+            sectionId,
+            fromDate,
+            toDate,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Leave records fetched successfully",
+            ...result,
+        });
+    } catch (error) {
+        console.error("Get leaves error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch leave records",
+            error: error.message,
         });
     }
 };
