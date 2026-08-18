@@ -910,7 +910,6 @@ export const getLeaves = async ({
                 createdBy: {
                     select: {
                         id: true,
-                        name: true,
                     },
                 },
 
