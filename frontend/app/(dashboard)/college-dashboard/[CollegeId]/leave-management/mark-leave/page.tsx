@@ -216,9 +216,6 @@ export default function MarkLeavePage() {
     const [toDate, setToDate] =
         useState("");
 
-    const [reason, setReason] =
-        useState("");
-
     const [notificationFile, setNotificationFile] =
         useState<File | null>(null);
 
@@ -280,11 +277,11 @@ export default function MarkLeavePage() {
                 ),
 
                 fetch(
-                    `${API_URL}/sections`
+                    `${API_URL}/sections?page=1&limit=1000`
                 ),
 
                 fetch(
-                    `${API_URL}/leave/types`
+                    `${API_URL}/leave/types?page=1&limit=1000`
                 ),
 
             ]);
@@ -802,34 +799,34 @@ export default function MarkLeavePage() {
         );
 
 
-    const isCasualLeave =
-        selectedLeaveTypeObject?.name
-            ?.trim()
-            .toLowerCase() ===
-        "casual leave";
+    // const isCasualLeave =
+    //     selectedLeaveTypeObject?.name
+    //         ?.trim()
+    //         .toLowerCase() ===
+    //     "casual leave";
 
 
     // ====================================================
     // CASUAL LEAVE
     // ====================================================
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        if (
-            isCasualLeave &&
-            fromDate
-        ) {
+    //     if (
+    //         isCasualLeave &&
+    //         fromDate
+    //     ) {
 
-            setToDate(
-                fromDate
-            );
+    //         setToDate(
+    //             fromDate
+    //         );
 
-        }
+    //     }
 
-    }, [
-        isCasualLeave,
-        fromDate,
-    ]);
+    // }, [
+    //     isCasualLeave,
+    //     fromDate,
+    // ]);
 
 
     // ====================================================
@@ -979,19 +976,19 @@ export default function MarkLeavePage() {
         }
 
 
-        if (
-            !isCasualLeave &&
-            new Date(toDate) <
-            new Date(fromDate)
-        ) {
+        // if (
+        //     !isCasualLeave &&
+        //     new Date(toDate) <
+        //     new Date(fromDate)
+        // ) {
 
-            setErrorMessage(
-                "To date cannot be earlier than from date."
-            );
+        //     setErrorMessage(
+        //         "To date cannot be earlier than from date."
+        //     );
 
-            return;
+        //     return;
 
-        }
+        // }
 
 
         try {
@@ -1023,20 +1020,8 @@ export default function MarkLeavePage() {
 
             formData.append(
                 "toDate",
-                isCasualLeave
-                    ? fromDate
-                    : toDate
+                toDate
             );
-
-
-            if (reason.trim()) {
-
-                formData.append(
-                    "reason",
-                    reason.trim()
-                );
-
-            }
 
 
             // Optional PDF
@@ -1053,7 +1038,7 @@ export default function MarkLeavePage() {
 
             const response =
                 await fetch(
-                    `${API_URL}/leaves`,
+                    `${API_URL}/leave`,
                     {
                         method: "POST",
                         body: formData,
@@ -1118,8 +1103,6 @@ export default function MarkLeavePage() {
         setFromDate("");
 
         setToDate("");
-
-        setReason("");
 
         setNotificationFile(
             null
@@ -2357,17 +2340,15 @@ export default function MarkLeavePage() {
                                         <Input
                                             type="date"
                                             value={
-                                                isCasualLeave
-                                                    ? fromDate
-                                                    : toDate
+                                                toDate
                                             }
                                             min={
                                                 fromDate ||
                                                 undefined
                                             }
-                                            disabled={
-                                                isCasualLeave
-                                            }
+                                            // disabled={
+                                            //     isCasualLeave
+                                            // }
                                             onChange={(
                                                 event
                                             ) =>
@@ -2381,7 +2362,7 @@ export default function MarkLeavePage() {
                                     </div>
 
 
-                                    {isCasualLeave && (
+                                    {/* {isCasualLeave && (
 
                                         <p className="mt-2 text-xs text-amber-600">
 
@@ -2390,35 +2371,9 @@ export default function MarkLeavePage() {
 
                                         </p>
 
-                                    )}
+                                    )} */}
 
                                 </div>
-
-                            </div>
-
-
-                            {/* REASON */}
-
-                            <div>
-
-                                <Label className="mb-2 block">
-                                    Reason
-                                </Label>
-
-                                <Textarea
-                                    value={
-                                        reason
-                                    }
-                                    onChange={(
-                                        event
-                                    ) =>
-                                        setReason(
-                                            event.target.value
-                                        )
-                                    }
-                                    placeholder="Enter leave reason..."
-                                    rows={4}
-                                />
 
                             </div>
 

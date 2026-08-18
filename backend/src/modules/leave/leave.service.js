@@ -327,133 +327,133 @@ export const markLeaveService = async ({
     // CASUAL LEAVE RULES
     // ========================================
 
-    const isCasualLeave =
-        leaveType.name
-            .trim()
-            .toLowerCase() ===
-        "casual leave";
+    // const isCasualLeave =
+    //     leaveType.name
+    //         .trim()
+    //         .toLowerCase() ===
+    //     "casual leave";
 
 
-    if (isCasualLeave) {
+    // if (isCasualLeave) {
 
-        // --------------------------------------
-        // ONLY ONE DAY
-        // --------------------------------------
+    //     // --------------------------------------
+    //     // ONLY ONE DAY
+    //     // --------------------------------------
 
-        if (totalDays !== 1) {
+    //     if (totalDays !== 1) {
 
-            const error = new Error(
-                "Casual Leave can only be marked for one day at a time."
-            );
+    //         const error = new Error(
+    //             "Casual Leave can only be marked for one day at a time."
+    //         );
 
-            error.statusCode = 400;
+    //         error.statusCode = 400;
 
-            throw error;
-        }
-
-
-        // --------------------------------------
-        // CURRENT YEAR
-        // --------------------------------------
-
-        const year =
-            startDate.getFullYear();
+    //         throw error;
+    //     }
 
 
-        const yearStart =
-            new Date(
-                year,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0
-            );
+    //     // --------------------------------------
+    //     // CURRENT YEAR
+    //     // --------------------------------------
+
+    //     const year =
+    //         startDate.getFullYear();
 
 
-        const yearEnd =
-            new Date(
-                year,
-                11,
-                31,
-                23,
-                59,
-                59,
-                999
-            );
+    //     const yearStart =
+    //         new Date(
+    //             year,
+    //             0,
+    //             1,
+    //             0,
+    //             0,
+    //             0,
+    //             0
+    //         );
 
 
-        // --------------------------------------
-        // USED CASUAL LEAVES
-        // --------------------------------------
-
-        const usedCasualLeaves =
-            await prisma.leave.aggregate({
-                where: {
-                    staffId: staff.id,
-
-                    leaveTypeId:
-                        leaveType.id,
-
-                    fromDate: {
-                        gte: yearStart,
-                        lte: yearEnd,
-                    },
-                },
-
-                _sum: {
-                    totalDays: true,
-                },
-            });
+    //     const yearEnd =
+    //         new Date(
+    //             year,
+    //             11,
+    //             31,
+    //             23,
+    //             59,
+    //             59,
+    //             999
+    //         );
 
 
-        const usedDays =
-            Number(
-                usedCasualLeaves._sum.totalDays
-            ) || 0;
+    //     // --------------------------------------
+    //     // USED CASUAL LEAVES
+    //     // --------------------------------------
+
+    //     const usedCasualLeaves =
+    //         await prisma.leave.aggregate({
+    //             where: {
+    //                 staffId: staff.id,
+
+    //                 leaveTypeId:
+    //                     leaveType.id,
+
+    //                 fromDate: {
+    //                     gte: yearStart,
+    //                     lte: yearEnd,
+    //                 },
+    //             },
+
+    //             _sum: {
+    //                 totalDays: true,
+    //             },
+    //         });
 
 
-        const allowedDays = 24;
+    //     const usedDays =
+    //         Number(
+    //             usedCasualLeaves._sum.totalDays
+    //         ) || 0;
 
 
-        // --------------------------------------
-        // ALL 24 USED
-        // --------------------------------------
-
-        if (usedDays >= allowedDays) {
-
-            const error = new Error(
-                `Employee has already used all ${allowedDays} Casual Leave days for ${year}.`
-            );
-
-            error.statusCode = 400;
-
-            throw error;
-        }
+    //     const allowedDays = 24;
 
 
-        // --------------------------------------
-        // EXCEEDS LIMIT
-        // --------------------------------------
+    //     // --------------------------------------
+    //     // ALL 24 USED
+    //     // --------------------------------------
 
-        if (
-            usedDays + totalDays >
-            allowedDays
-        ) {
+    //     if (usedDays >= allowedDays) {
 
-            const remaining =
-                allowedDays - usedDays;
+    //         const error = new Error(
+    //             `Employee has already used all ${allowedDays} Casual Leave days for ${year}.`
+    //         );
 
-            const error = new Error(
-                `Only ${remaining} Casual Leave day(s) remaining for ${year}.`
-            );
+    //         error.statusCode = 400;
 
-            error.statusCode = 400;
+    //         throw error;
+    //     }
 
-            throw error;
-        }
-    }
+
+    //     // --------------------------------------
+    //     // EXCEEDS LIMIT
+    //     // --------------------------------------
+
+    //     if (
+    //         usedDays + totalDays >
+    //         allowedDays
+    //     ) {
+
+    //         const remaining =
+    //             allowedDays - usedDays;
+
+    //         const error = new Error(
+    //             `Only ${remaining} Casual Leave day(s) remaining for ${year}.`
+    //         );
+
+    //         error.statusCode = 400;
+
+    //         throw error;
+    //     }
+    // }
 
 
     // ========================================
