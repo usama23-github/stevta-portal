@@ -889,7 +889,7 @@ export const getLeaves = async ({
                 region: {
                     select: {
                         id: true,
-                        region: true,
+                        name: true,
                     },
                 },
 
