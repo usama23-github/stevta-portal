@@ -751,8 +751,6 @@ export const markLeaveService = async ({
     }
 };
 
-import prisma from "../../prisma/prisma.js";
-
 export const getLeaves = async ({
     page = 1,
     limit = 10,
