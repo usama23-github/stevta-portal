@@ -172,14 +172,18 @@ model Staff {
 
   postingPlaceId  Int?
   sectionId       Int?
+  shiftId         Int?
 
-  designation     Designation? @relation(fields: [designationId], references: [id])
+  designation     Designation?  @relation(fields: [designationId], references: [id])
   postingPlace    PostingPlace? @relation(fields: [postingPlaceId], references: [id])
   section         Section?      @relation(fields: [sectionId], references: [id])
+  shift           Shift?        @relation(fields: [shiftId], references: [id])
 
   attendances     Attendance[]
 
   leaves          Leave[]
+
+  shiftHistory    StaffShiftHistory[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -187,6 +191,7 @@ model Staff {
   @@index([postingPlaceId])
   @@index([sectionId])
   @@index([designationId])
+  @@index([shiftId])
   @@index([empNo])
   @@index([name])
 }
@@ -393,4 +398,39 @@ enum UserRole {
   OFFICE_ADMIN
   INSTITUTE_ADMIN
   STAFF
+}
+
+model Shift {
+  id              Int      @id @default(autoincrement())
+  name            String
+
+  staff           Staff[]
+  staffHistory    StaffShiftHistory[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model StaffShiftHistory {
+  id              String   @id @default(uuid())
+
+  staffId         String
+  shiftId         Int
+
+  effectiveFrom   DateTime
+  effectiveTo     DateTime?
+
+  changedById     String?
+  reason          String?
+
+  staff           Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  shift           Shift    @relation(fields: [shiftId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([staffId])
+  @@index([shiftId])
+  @@index([effectiveFrom])
+  @@index([effectiveTo])
 }
