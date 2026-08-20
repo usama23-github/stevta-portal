@@ -20,6 +20,14 @@ export interface LeaveRecord {
         section: string;
     };
 
+    designation: {
+        designation: string;
+    }
+
+    section: {
+        section: string;
+    }
+
     leaveType: {
         id: number;
         name: string;

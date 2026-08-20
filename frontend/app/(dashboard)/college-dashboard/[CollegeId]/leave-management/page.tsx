@@ -284,22 +284,22 @@ export default function LeaveManagement() {
                     <div>
 
                         <h2 className="text-2xl font-bold text-[#0f172a]">
-                            Leave Management
+                            Leave Records
                         </h2>
 
                         <p className="mt-1 text-sm text-[#64748b]">
-                            Manage staff leave applications and approvals
+                            Show staff leave applications and approvals
                         </p>
 
                     </div>
 
-                    <Button
+                    {/* <Button
                         className="h-11 rounded-xl bg-[#2563eb] px-5 text-white shadow-sm hover:bg-[#1d4ed8]"
                         onClick={() => setShowMarkLeave(true)}
                     >
                         <CalendarPlus className="mr-2 h-4 w-4" />
                         Mark Leave
-                    </Button>
+                    </Button> */}
 
 
 
@@ -470,8 +470,8 @@ export default function LeaveManagement() {
                                     "From Date",
                                     "To Date",
                                     "Total Days",
-                                    "Applied At",
-                                    "Status",
+                                    // "Applied At",
+                                    // "Status",
                                     "Action",
                                 ].map((heading) => (
 
@@ -492,7 +492,7 @@ export default function LeaveManagement() {
 
                         <tbody>
 
-                            {leaves.map((record) => (
+                            {leaves?.map((record) => (
 
                                 <tr
                                     key={record.id}
@@ -529,7 +529,7 @@ export default function LeaveManagement() {
 
                                     <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
 
-                                        {record.staff.designation}
+                                        {record?.designation?.designation}
 
                                     </td>
 
@@ -537,7 +537,7 @@ export default function LeaveManagement() {
 
                                     <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
 
-                                        {record.staff.section}
+                                        {record?.section?.section}
 
                                     </td>
 
@@ -585,19 +585,19 @@ export default function LeaveManagement() {
 
                                     {/* APPLIED */}
 
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
+                                    {/* <td className="border-b border-[#f1f5f9] px-6 py-4 text-sm text-[#334155]">
 
                                         {record.appliedAt}
 
-                                    </td>
+                                    </td> */}
 
                                     {/* STATUS */}
 
-                                    <td className="border-b border-[#f1f5f9] px-6 py-4">
+                                    {/* <td className="border-b border-[#f1f5f9] px-6 py-4">
 
                                         {getStatusBadge(record)}
 
-                                    </td>
+                                    </td> */}
 
                                     {/* ACTION */}
 
