@@ -939,3 +939,37 @@ export const getLeaves = async ({
         },
     };
 };
+
+export const deleteLeave = async (id) => {
+    // Check if leave exists
+    const leave = await prisma.leave.findUnique({
+        where: {
+            id,
+        },
+        include: {
+            documents: true,
+        },
+    });
+
+    if (!leave) {
+        const error = new Error("Leave record not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    // Delete related documents first
+    await prisma.leaveDocument.deleteMany({
+        where: {
+            leaveId: id,
+        },
+    });
+
+    // Delete leave
+    const deletedLeave = await prisma.leave.delete({
+        where: {
+            id,
+        },
+    });
+
+    return deletedLeave;
+};

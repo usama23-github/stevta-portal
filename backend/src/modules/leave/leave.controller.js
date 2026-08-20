@@ -3,6 +3,7 @@ import {
     getAllLeaveTypesService,
     markLeaveService,
     getLeaves,
+    deleteLeave,
 } from "./leave.service.js";
 
 
@@ -296,6 +297,34 @@ export const getLeavesController = async (req, res) => {
             success: false,
             message: "Failed to fetch leave records",
             error: error.message,
+        });
+    }
+};
+
+export const deleteLeaveController = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Leave ID is required",
+            });
+        }
+
+        const deletedLeave = await deleteLeave(id);
+
+        return res.status(200).json({
+            success: true,
+            message: "Leave deleted successfully",
+            data: deletedLeave,
+        });
+    } catch (error) {
+        console.error("Delete leave error:", error);
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.message || "Failed to delete leave",
         });
     }
 };

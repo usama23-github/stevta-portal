@@ -5,6 +5,7 @@ import {
     getAllLeaveTypes,
     markLeave,
     getLeavesController,
+    deleteLeaveController,
 } from "./leave.controller.js";
 
 import {
@@ -20,7 +21,7 @@ const router = express.Router();
 router.post(
     "/",
     uploadLeaveNotification,
-    markLeave
+    markLeave,
 );
 
 
@@ -44,5 +45,7 @@ router.get(
     "/types",
     getAllLeaveTypes
 );
+
+router.delete("/:id", deleteLeaveController);
 
 export default router;
