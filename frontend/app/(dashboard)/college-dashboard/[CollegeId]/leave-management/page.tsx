@@ -2,9 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 
-import { PDFDocument } from "pdf-lib";
+import { format } from "date-fns";
+import dayjs from "dayjs";
 
 import { useEffect, useState } from "react";
+
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+
+import { Calendar } from "@/components/ui/calendar";
 
 import {
     Search,
@@ -18,6 +27,7 @@ import {
     Clock3,
     Eye,
     FileText,
+    CalendarIcon
 } from "lucide-react";
 
 import { getLeaves, LeaveRecord } from "@/lib/api/leaves";
@@ -65,6 +75,9 @@ export default function LeaveManagement() {
     const [compressingPdf, setCompressingPdf] =
         useState(false);
 
+    const [dateFrom, setDateFrom] = useState<Date>(new Date());
+    const [dateTo, setDateTo] = useState<Date>(new Date());
+
     // =====================================================
     // LOAD DATA
     // =====================================================
@@ -73,7 +86,9 @@ export default function LeaveManagement() {
         pageNumber = page,
         searchValue = search,
         status = statusFilter,
-        leaveType = leaveTypeFilter
+        leaveType = leaveTypeFilter,
+        dateFrom: string,
+        dateTo: string
     ) => {
         try {
             setLoading(true);
@@ -83,7 +98,9 @@ export default function LeaveManagement() {
                 10,
                 searchValue,
                 status,
-                leaveType
+                leaveType,
+                dateFrom,
+                dateTo
             );
 
             setLeaves(result.data);
@@ -109,7 +126,7 @@ export default function LeaveManagement() {
     // =====================================================
 
     useEffect(() => {
-        loadData(page);
+        loadData(page, search, statusFilter, leaveTypeFilter, format(dateFrom, "yyyy-MM-dd"), format(dateTo, "yyyy-MM-dd"));
     }, [page]);
 
     useEffect(() => {
@@ -178,7 +195,9 @@ export default function LeaveManagement() {
             1,
             searchValue,
             statusFilter,
-            leaveTypeFilter
+            leaveTypeFilter,
+            format(dateFrom, "yyyy-MM-dd"),
+            format(dateTo, "yyyy-MM-dd")
         );
     };
 
@@ -195,7 +214,9 @@ export default function LeaveManagement() {
             1,
             search,
             status,
-            leaveTypeFilter
+            leaveTypeFilter,
+            format(dateFrom, "yyyy-MM-dd"),
+            format(dateTo, "yyyy-MM-dd")
         );
     };
 
@@ -212,7 +233,47 @@ export default function LeaveManagement() {
             1,
             search,
             statusFilter,
-            leaveType
+            leaveType,
+            format(dateFrom, "yyyy-MM-dd"),
+            format(dateTo, "yyyy-MM-dd")
+        );
+    };
+
+    // =====================================================
+    // LEAVE DATE FROM FILTER
+    // =====================================================
+
+    const handleDateFromChange = async (
+        dateFromValue: string
+    ) => {
+        setPage(1);
+
+        loadData(
+            1,
+            search,
+            statusFilter,
+            leaveTypeFilter,
+            dateFromValue,
+            format(dateTo, "yyyy-MM-dd")
+        );
+    };
+
+    // =====================================================
+    // LEAVE DATE TO FILTER
+    // =====================================================
+
+    const handleDateToChange = async (
+        dateToValue: string
+    ) => {
+        setPage(1);
+
+        loadData(
+            1,
+            search,
+            statusFilter,
+            leaveTypeFilter,
+            format(dateFrom, "yyyy-MM-dd"),
+            dateToValue
         );
     };
 
@@ -347,13 +408,97 @@ export default function LeaveManagement() {
 
                     </div>
 
+                    <div className="mb-4 grid gap-5 lg:grid-cols-12">
+
+                        {/* Date From */}
+
+                        <div className="lg:col-span-6">
+                            <label className="mb-2 block text-sm font-medium">
+                                Date From
+                            </label>
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="h-11 w-full justify-start font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+
+                                        {dateFrom ? format(dateFrom, "PPP") : "Select Date"}
+                                    </Button>
+                                </PopoverTrigger>
+
+                                <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={dateFrom}
+                                        onSelect={(selected) => {
+                                            if (!selected) return;
+
+                                            setDateFrom(selected);
+
+                                            handleDateFromChange(
+                                                format(selected, "yyyy-MM-dd")
+                                            );
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+
+                        {/* Date To */}
+
+                        <div className="lg:col-span-6">
+                            <label className="mb-2 block text-sm font-medium">
+                                Date To
+                            </label>
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className="h-11 w-full justify-start font-normal"
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+
+                                        {dateTo ? format(dateTo, "PPP") : "Select Date"}
+                                    </Button>
+                                </PopoverTrigger>
+
+                                <PopoverContent
+                                    className="w-auto p-0"
+                                    align="start"
+                                >
+                                    <Calendar
+                                        mode="single"
+                                        selected={dateTo}
+                                        onSelect={(selected) => {
+                                            if (!selected) return;
+
+                                            setDateTo(selected);
+
+                                            handleDateToChange(
+                                                format(selected, "yyyy-MM-dd")
+                                            );
+                                        }}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+
+                    </div>
+
                     {/* FILTER ROW */}
 
-                    <div className="flex flex-col gap-3 lg:flex-row">
+                    <div className="grid gap-5 lg:grid-cols-12">
 
                         {/* STATUS */}
-
-                        <div className="relative">
+                        {/* 
+                        <div className="relative lg:col-span-4">
 
                             <Filter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
 
@@ -389,11 +534,11 @@ export default function LeaveManagement() {
 
                             </select>
 
-                        </div>
+                        </div> */}
 
                         {/* LEAVE TYPE */}
 
-                        <div className="relative">
+                        <div className="relative lg:col-span-4">
 
                             <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748b]" />
 

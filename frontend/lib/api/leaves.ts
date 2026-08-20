@@ -72,7 +72,9 @@ export const getLeaves = async (
     limit = 10,
     search = "",
     status = "",
-    leaveTypeId = ""
+    leaveTypeId = "",
+    dateFrom = "",
+    dateTo = "",
 ) => {
 
     const params = new URLSearchParams();
@@ -99,6 +101,20 @@ export const getLeaves = async (
         params.append(
             "leaveTypeId",
             leaveTypeId
+        );
+    }
+
+    if (dateFrom) {
+        params.append(
+            "fromDate",
+            dateFrom
+        );
+    }
+
+    if (dateTo) {
+        params.append(
+            "toDate",
+            dateTo
         );
     }
 
