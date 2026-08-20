@@ -405,6 +405,7 @@ model Shift {
   name            String
 
   staff           Staff[]
+  shiftTimings    ShiftTiming[]
   staffHistory    StaffShiftHistory[]
 
   createdAt       DateTime @default(now())
@@ -430,6 +431,31 @@ model StaffShiftHistory {
   updatedAt       DateTime @updatedAt
 
   @@index([staffId])
+  @@index([shiftId])
+  @@index([effectiveFrom])
+  @@index([effectiveTo])
+}
+
+model ShiftTiming {
+  id              String   @id @default(uuid())
+
+  shiftId         Int
+
+  shiftStartTime  DateTime
+  checkInOnTime   DateTime
+  checkInLate     DateTime
+
+  checkOutEarly   DateTime
+  checkOutOnTime  DateTime
+
+  effectiveFrom   DateTime
+  effectiveTo     DateTime?
+
+  shift           Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   @@index([shiftId])
   @@index([effectiveFrom])
   @@index([effectiveTo])
