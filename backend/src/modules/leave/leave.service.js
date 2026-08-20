@@ -2,6 +2,14 @@ import { PrismaClient } from "@prisma/client";
 import fs from "fs/promises";
 import path from "path";
 import { PDFDocument } from "pdf-lib";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const KARACHI_TIMEZONE = "Asia/Karachi";
 
 const prisma = new PrismaClient();
 
@@ -929,8 +937,21 @@ export const getLeaves = async ({
         }),
     ]);
 
+    const formattedLeaves = leaves.map((leave) => ({
+        ...leave,
+
+        fromDate: dayjs(leave.fromDate)
+            .tz(KARACHI_TIMEZONE)
+            .format("YYYY-MM-DD"),
+
+        toDate: dayjs(leave.toDate)
+            .tz(KARACHI_TIMEZONE)
+            .format("YYYY-MM-DD"),
+    }));
+
     return {
-        data: leaves,
+        data: formattedLeaves,
+
         meta: {
             page,
             limit,
