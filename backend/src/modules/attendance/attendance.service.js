@@ -9,6 +9,8 @@ import timezone from "dayjs/plugin/timezone.js";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const KARACHI_TIMEZONE = "Asia/Karachi";
+
 const prisma = new PrismaClient();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -277,109 +279,459 @@ export const getAttendanceLogsService =
     });
   };
 
+// export const getStaffAttendanceService = async (query) => {
+//   const page = Number(query.page) || 1;
+//   const limit = Number(query.limit) || 10;
+//   const skip = (page - 1) * limit;
+
+//   const sortField = query.sortField || "attendanceDate";
+//   const sortOrder = query.sortOrder === "desc" ? "desc" : "asc";
+
+//   const where = {};
+
+//   // Date filter
+//   if (query.date) {
+//     const start = new Date(query.date);
+//     start.setHours(0, 0, 0, 0);
+
+//     const end = new Date(query.date);
+//     end.setHours(23, 59, 59, 999);
+
+//     where.attendanceDate = {
+//       gte: start,
+//       lte: end,
+//     };
+//   } else {
+//     where.attendanceDate = {};
+
+//     if (query.fromDate) {
+//       const from = new Date(query.fromDate);
+//       from.setHours(0, 0, 0, 0);
+//       where.attendanceDate.gte = from;
+//     }
+
+//     if (query.toDate) {
+//       const to = new Date(query.toDate);
+//       to.setHours(23, 59, 59, 999);
+//       where.attendanceDate.lte = to;
+//     }
+
+//     // Default to today when no date filters are provided
+//     if (!query.fromDate && !query.toDate) {
+//       const today = new Date();
+
+//       const start = new Date(today);
+//       start.setHours(0, 0, 0, 0);
+
+//       const end = new Date(today);
+//       end.setHours(23, 59, 59, 999);
+
+//       where.attendanceDate = {
+//         gte: start,
+//         lte: end,
+//       };
+//     }
+//   }
+
+//   // Staff filters
+//   where.staff = {};
+
+//   if (query.postingPlaceId) {
+//     where.staff.postingPlaceId = Number(query.postingPlaceId);
+//   }
+
+//   if (query.sectionId) {
+//     where.staff.sectionId = Number(query.sectionId);
+//   }
+
+//   if (query.designationId) {
+//     where.staff.designationId = Number(query.designationId);
+//   }
+
+//   // Attendance filters
+//   if (query.attendanceStatusId) {
+//     where.attendanceStatusId = Number(query.attendanceStatusId);
+//   }
+
+//   if (query.checkInStatusId) {
+//     where.checkInStatusId = Number(query.checkInStatusId);
+//   }
+
+//   if (query.checkOutStatusId) {
+//     where.checkOutStatusId = Number(query.checkOutStatusId);
+//   }
+
+//   // Search
+//   if (query.search) {
+//     where.staff.OR = [
+//       {
+//         empNo: {
+//           contains: query.search,
+//           mode: "insensitive",
+//         },
+//       },
+//       {
+//         name: {
+//           contains: query.search,
+//           mode: "insensitive",
+//         },
+//       },
+//       {
+//         department: {
+//           contains: query.search,
+//           mode: "insensitive",
+//         },
+//       },
+//       {
+//         designation: {
+//           is: {
+//             designation: {
+//               contains: query.search,
+//               mode: "insensitive",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         designation: {
+//           is: {
+//             scale: {
+//               is: {
+//                 scale: {
+//                   contains: query.search,
+//                   mode: "insensitive",
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//       {
+//         postingPlace: {
+//           is: {
+//             postingPlace: {
+//               contains: query.search,
+//               mode: "insensitive",
+//             },
+//           },
+//         },
+//       },
+//       {
+//         section: {
+//           is: {
+//             section: {
+//               contains: query.search,
+//               mode: "insensitive",
+//             },
+//           },
+//         },
+//       },
+//     ];
+//   }
+
+//   // Remove empty staff filter
+//   if (Object.keys(where.staff).length === 0) {
+//     delete where.staff;
+//   }
+
+//   const [rows, total] = await prisma.$transaction([
+//     prisma.attendance.findMany({
+//       where,
+
+//       include: {
+//         staff: {
+//           select: {
+//             empNo: true,
+//             name: true,
+
+//             designation: {
+//               select: {
+//                 designation: true,
+//                 scale: {
+//                   select: {
+//                     scale: true,
+//                   },
+//                 },
+//               },
+//             },
+
+//             postingPlace: {
+//               select: {
+//                 postingPlace: true,
+//               },
+//             },
+
+//             section: {
+//               select: {
+//                 section: true,
+
+//                 department: {
+//                   select: {
+//                     department: true,
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+
+//       skip,
+//       take: limit,
+
+//       orderBy: {
+//         [sortField]: sortOrder,
+//       },
+//     }),
+
+//     prisma.attendance.count({
+//       where,
+//     }),
+//   ]);
+
+//   const data = rows.map((row) => {
+//     let workingHours = null;
+
+//     if (row.checkInTime && row.checkOutTime) {
+//       const diffMs = row.checkOutTime.getTime() - row.checkInTime.getTime();
+
+//       const hours = Math.floor(diffMs / (1000 * 60 * 60));
+//       const minutes = Math.floor(
+//         (diffMs % (1000 * 60 * 60)) / (1000 * 60)
+//       );
+//       const seconds = Math.floor(
+//         (diffMs % (1000 * 60)) / 1000
+//       );
+
+//       workingHours = `${hours}h ${minutes}m ${seconds}s`;
+//     }
+
+//     return {
+//       empNo: row.staff.empNo,
+
+//       employeeName: row.staff.name,
+
+//       designation: row.staff.designation
+//         ? `${row.staff.designation.designation} ${row.staff.designation.scale?.scale ?? ""
+//           }`.trim()
+//         : null,
+
+//       department:
+//         row.staff.section?.department?.department ?? null,
+
+//       postingPlace:
+//         row.staff.postingPlace?.postingPlace ?? null,
+
+//       section:
+//         row.staff.section?.section ?? null,
+
+//       date: dayjs(row.attendanceDate)
+//         .tz("Asia/Karachi")
+//         .format("YYYY-MM-DD"),
+
+//       attendanceStatusId: row.attendanceStatusId,
+
+//       attendanceStatus:
+//         row.attendanceStatusId === 1
+//           ? "Present"
+//           : "Absent",
+
+//       checkIn: row.checkInTime
+//         ? dayjs(row.checkInTime)
+//           .tz("Asia/Karachi")
+//           .format("hh:mm:ss A")
+//         : null,
+
+//       checkInStatusId: row.checkInStatusId,
+
+//       checkInStatus:
+//         row.checkInStatusId === 1
+//           ? "On Time"
+//           : row.checkInStatusId === 2
+//             ? "Late"
+//             : null,
+
+//       checkOut: row.checkOutTime
+//         ? dayjs(row.checkOutTime)
+//           .tz("Asia/Karachi")
+//           .format("hh:mm:ss A")
+//         : null,
+
+//       checkOutStatusId: row.checkOutStatusId,
+
+//       checkOutStatus:
+//         row.checkOutStatusId === 1
+//           ? "On Time"
+//           : row.checkOutStatusId === 2
+//             ? "Early"
+//             : null,
+
+//       workingHours,
+//     };
+//   });
+
+//   return {
+//     data,
+
+//     meta: {
+//       total,
+//       page,
+//       limit,
+//       totalPages: Math.ceil(total / limit),
+//       sortField,
+//       sortOrder,
+//     },
+//   };
+// };
+
 export const getStaffAttendanceService = async (query) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
   const sortField = query.sortField || "attendanceDate";
-  const sortOrder = query.sortOrder === "desc" ? "desc" : "asc";
+  const sortOrder =
+    query.sortOrder === "desc" ? "desc" : "asc";
 
-  const where = {};
+  /*
+  |--------------------------------------------------------------------------
+  | Date Range
+  |--------------------------------------------------------------------------
+  */
 
-  // Date filter
+  let startDate;
+  let endDate;
+
   if (query.date) {
-    const start = new Date(query.date);
-    start.setHours(0, 0, 0, 0);
+    startDate = dayjs
+      .tz(query.date, KARACHI_TIMEZONE)
+      .startOf("day")
+      .toDate();
 
-    const end = new Date(query.date);
-    end.setHours(23, 59, 59, 999);
+    endDate = dayjs
+      .tz(query.date, KARACHI_TIMEZONE)
+      .endOf("day")
+      .toDate();
+  } else if (query.fromDate || query.toDate) {
+    startDate = query.fromDate
+      ? dayjs
+        .tz(query.fromDate, KARACHI_TIMEZONE)
+        .startOf("day")
+        .toDate()
+      : dayjs()
+        .tz(KARACHI_TIMEZONE)
+        .startOf("day")
+        .toDate();
 
-    where.attendanceDate = {
-      gte: start,
-      lte: end,
-    };
+    endDate = query.toDate
+      ? dayjs
+        .tz(query.toDate, KARACHI_TIMEZONE)
+        .endOf("day")
+        .toDate()
+      : dayjs()
+        .tz(KARACHI_TIMEZONE)
+        .endOf("day")
+        .toDate();
   } else {
-    where.attendanceDate = {};
+    startDate = dayjs
+      .tz(undefined, KARACHI_TIMEZONE)
+      .startOf("day")
+      .toDate();
 
-    if (query.fromDate) {
-      const from = new Date(query.fromDate);
-      from.setHours(0, 0, 0, 0);
-      where.attendanceDate.gte = from;
-    }
-
-    if (query.toDate) {
-      const to = new Date(query.toDate);
-      to.setHours(23, 59, 59, 999);
-      where.attendanceDate.lte = to;
-    }
-
-    // Default to today when no date filters are provided
-    if (!query.fromDate && !query.toDate) {
-      const today = new Date();
-
-      const start = new Date(today);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(today);
-      end.setHours(23, 59, 59, 999);
-
-      where.attendanceDate = {
-        gte: start,
-        lte: end,
-      };
-    }
+    endDate = dayjs
+      .tz(undefined, KARACHI_TIMEZONE)
+      .endOf("day")
+      .toDate();
   }
 
-  // Staff filters
-  where.staff = {};
+  /*
+  |--------------------------------------------------------------------------
+  | Staff Filters
+  |--------------------------------------------------------------------------
+  */
+
+  const staffWhere = {};
 
   if (query.postingPlaceId) {
-    where.staff.postingPlaceId = Number(query.postingPlaceId);
+    staffWhere.postingPlaceId =
+      Number(query.postingPlaceId);
   }
 
   if (query.sectionId) {
-    where.staff.sectionId = Number(query.sectionId);
+    staffWhere.sectionId =
+      Number(query.sectionId);
   }
 
   if (query.designationId) {
-    where.staff.designationId = Number(query.designationId);
+    staffWhere.designationId =
+      Number(query.designationId);
   }
 
-  // Attendance filters
-  if (query.attendanceStatusId) {
-    where.attendanceStatusId = Number(query.attendanceStatusId);
+  /*
+  |--------------------------------------------------------------------------
+  | Department Filter
+  |--------------------------------------------------------------------------
+  |
+  | Staff -> Section -> Department
+  |
+  */
+
+  if (query.departmentId) {
+    staffWhere.section = {
+      is: {
+        departmentId: Number(query.departmentId),
+      },
+    };
   }
 
-  if (query.checkInStatusId) {
-    where.checkInStatusId = Number(query.checkInStatusId);
-  }
+  /*
+  |--------------------------------------------------------------------------
+  | Search
+  |--------------------------------------------------------------------------
+  */
 
-  if (query.checkOutStatusId) {
-    where.checkOutStatusId = Number(query.checkOutStatusId);
-  }
-
-  // Search
   if (query.search) {
-    where.staff.OR = [
+    staffWhere.OR = [
       {
         empNo: {
           contains: query.search,
           mode: "insensitive",
         },
       },
+
       {
         name: {
           contains: query.search,
           mode: "insensitive",
         },
       },
+
       {
-        department: {
-          contains: query.search,
-          mode: "insensitive",
+        section: {
+          is: {
+            section: {
+              contains: query.search,
+              mode: "insensitive",
+            },
+          },
         },
       },
+
+      {
+        section: {
+          is: {
+            department: {
+              is: {
+                department: {
+                  contains: query.search,
+                  mode: "insensitive",
+                },
+              },
+            },
+          },
+        },
+      },
+
       {
         designation: {
           is: {
@@ -390,6 +742,7 @@ export const getStaffAttendanceService = async (query) => {
           },
         },
       },
+
       {
         designation: {
           is: {
@@ -404,6 +757,7 @@ export const getStaffAttendanceService = async (query) => {
           },
         },
       },
+
       {
         postingPlace: {
           is: {
@@ -414,168 +768,440 @@ export const getStaffAttendanceService = async (query) => {
           },
         },
       },
-      {
-        section: {
-          is: {
-            section: {
-              contains: query.search,
-              mode: "insensitive",
-            },
-          },
-        },
-      },
     ];
   }
 
-  // Remove empty staff filter
-  if (Object.keys(where.staff).length === 0) {
-    delete where.staff;
-  }
+  /*
+  |--------------------------------------------------------------------------
+  | Get Staff
+  |--------------------------------------------------------------------------
+  */
 
-  const [rows, total] = await prisma.$transaction([
-    prisma.attendance.findMany({
-      where,
+  const [staff, totalStaff] = await prisma.$transaction([
+    prisma.staff.findMany({
+      where: staffWhere,
 
       include: {
-        staff: {
-          select: {
-            empNo: true,
-            name: true,
+        /*
+        |--------------------------------------------------------------------------
+        | Section -> Department
+        |--------------------------------------------------------------------------
+        */
 
-            designation: {
-              select: {
-                designation: true,
-                scale: {
-                  select: {
-                    scale: true,
-                  },
-                },
-              },
+        section: {
+          include: {
+            department: true,
+          },
+        },
+
+        /*
+        |--------------------------------------------------------------------------
+        | Designation -> Scale
+        |--------------------------------------------------------------------------
+        */
+
+        designation: {
+          include: {
+            scale: true,
+          },
+        },
+
+        /*
+        |--------------------------------------------------------------------------
+        | Posting Place
+        |--------------------------------------------------------------------------
+        */
+
+        postingPlace: true,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Attendance
+        |--------------------------------------------------------------------------
+        */
+
+        attendances: {
+          where: {
+            attendanceDate: {
+              gte: startDate,
+              lte: endDate,
+            },
+          },
+
+          orderBy: {
+            attendanceDate: "asc",
+          },
+        },
+
+        /*
+        |--------------------------------------------------------------------------
+        | Approved Leaves
+        |--------------------------------------------------------------------------
+        |
+        | Get leaves which overlap the selected date range.
+        |
+        */
+
+        leaves: {
+          where: {
+            fromDate: {
+              lte: endDate,
             },
 
-            postingPlace: {
-              select: {
-                postingPlace: true,
-              },
+            toDate: {
+              gte: startDate,
             },
 
-            section: {
-              select: {
-                section: true,
+            status: "APPROVED",
+          },
 
-                department: {
-                  select: {
-                    department: true,
-                  },
-                },
-              },
-            },
+          include: {
+            leaveType: true,
+          },
+
+          orderBy: {
+            fromDate: "asc",
           },
         },
       },
 
-      skip,
-      take: limit,
-
       orderBy: {
-        [sortField]: sortOrder,
+        name: "asc",
       },
     }),
 
-    prisma.attendance.count({
-      where,
+    prisma.staff.count({
+      where: staffWhere,
     }),
   ]);
 
-  const data = rows.map((row) => {
-    let workingHours = null;
+  /*
+  |--------------------------------------------------------------------------
+  | Generate Attendance Report
+  |--------------------------------------------------------------------------
+  */
 
-    if (row.checkInTime && row.checkOutTime) {
-      const diffMs = row.checkOutTime.getTime() - row.checkInTime.getTime();
+  const data = [];
 
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor(
-        (diffMs % (1000 * 60 * 60)) / (1000 * 60)
-      );
-      const seconds = Math.floor(
-        (diffMs % (1000 * 60)) / 1000
-      );
+  let currentDate = dayjs(startDate).tz(
+    KARACHI_TIMEZONE
+  );
 
-      workingHours = `${hours}h ${minutes}m ${seconds}s`;
+  const lastDate = dayjs(endDate).tz(
+    KARACHI_TIMEZONE
+  );
+
+  while (
+    currentDate.isBefore(lastDate) ||
+    currentDate.isSame(lastDate, "day")
+  ) {
+    for (const employee of staff) {
+      /*
+      |--------------------------------------------------------------------------
+      | Find attendance for this employee/date
+      |--------------------------------------------------------------------------
+      */
+
+      const attendance =
+        employee.attendances.find((item) =>
+          dayjs(item.attendanceDate)
+            .tz(KARACHI_TIMEZONE)
+            .isSame(currentDate, "day")
+        );
+
+      /*
+      |--------------------------------------------------------------------------
+      | Find leave for this employee/date
+      |--------------------------------------------------------------------------
+      */
+
+      const leave = employee.leaves.find((item) => {
+        const leaveStart = dayjs(item.fromDate)
+          .tz(KARACHI_TIMEZONE);
+
+        const leaveEnd = dayjs(item.toDate)
+          .tz(KARACHI_TIMEZONE);
+
+        return (
+          (
+            currentDate.isSame(
+              leaveStart,
+              "day"
+            )
+          ) ||
+          (
+            currentDate.isSame(
+              leaveEnd,
+              "day"
+            )
+          ) ||
+          (
+            currentDate.isAfter(
+              leaveStart,
+              "day"
+            ) &&
+            currentDate.isBefore(
+              leaveEnd,
+              "day"
+            )
+          )
+        );
+      });
+
+      /*
+      |--------------------------------------------------------------------------
+      | Determine Attendance Status
+      |--------------------------------------------------------------------------
+      */
+
+      let attendanceStatus = "Not Marked";
+      let attendanceStatusId = null;
+
+      if (leave) {
+        attendanceStatus = "Leave";
+
+        // Use your own status ID if you have one
+        attendanceStatusId = null;
+      } else if (attendance) {
+        attendanceStatusId =
+          attendance.attendanceStatusId;
+
+        attendanceStatus =
+          attendance.attendanceStatusId === 1
+            ? "Present"
+            : "Absent";
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | Working Hours
+      |--------------------------------------------------------------------------
+      */
+
+      let workingHours = null;
+
+      if (
+        attendance?.checkInTime &&
+        attendance?.checkOutTime
+      ) {
+        const diffMs =
+          attendance.checkOutTime.getTime() -
+          attendance.checkInTime.getTime();
+
+        if (diffMs >= 0) {
+          const hours = Math.floor(
+            diffMs /
+            (1000 * 60 * 60)
+          );
+
+          const minutes = Math.floor(
+            (diffMs %
+              (1000 * 60 * 60)) /
+            (1000 * 60)
+          );
+
+          const seconds = Math.floor(
+            (diffMs %
+              (1000 * 60)) /
+            1000
+          );
+
+          workingHours =
+            `${hours}h ${minutes}m ${seconds}s`;
+        }
+      }
+
+      /*
+      |--------------------------------------------------------------------------
+      | Add Row
+      |--------------------------------------------------------------------------
+      */
+
+      data.push({
+        empNo: employee.empNo,
+
+        employeeName: employee.name,
+
+        designation:
+          employee.designation
+            ? `${employee.designation.designation} ${employee.designation.scale?.scale ??
+              ""
+              }`.trim()
+            : null,
+
+        department:
+          employee.section?.department
+            ?.department ?? null,
+
+        section:
+          employee.section?.section ?? null,
+
+        postingPlace:
+          employee.postingPlace
+            ?.postingPlace ?? null,
+
+        date: currentDate.format(
+          "YYYY-MM-DD"
+        ),
+
+        attendanceStatusId,
+
+        attendanceStatus,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Leave
+        |--------------------------------------------------------------------------
+        */
+
+        leaveId: leave?.id ?? null,
+
+        leaveType:
+          leave?.leaveType?.name ?? null,
+
+        leaveFromDate: leave
+          ? dayjs(leave.fromDate)
+            .tz(KARACHI_TIMEZONE)
+            .format("YYYY-MM-DD")
+          : null,
+
+        leaveToDate: leave
+          ? dayjs(leave.toDate)
+            .tz(KARACHI_TIMEZONE)
+            .format("YYYY-MM-DD")
+          : null,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check In
+        |--------------------------------------------------------------------------
+        */
+
+        checkIn: attendance?.checkInTime
+          ? dayjs(attendance.checkInTime)
+            .tz(KARACHI_TIMEZONE)
+            .format("hh:mm:ss A")
+          : null,
+
+        checkInStatusId:
+          attendance?.checkInStatusId ?? null,
+
+        checkInStatus:
+          attendance?.checkInStatusId === 1
+            ? "On Time"
+            : attendance?.checkInStatusId === 2
+              ? "Late"
+              : null,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Check Out
+        |--------------------------------------------------------------------------
+        */
+
+        checkOut: attendance?.checkOutTime
+          ? dayjs(attendance.checkOutTime)
+            .tz(KARACHI_TIMEZONE)
+            .format("hh:mm:ss A")
+          : null,
+
+        checkOutStatusId:
+          attendance?.checkOutStatusId ?? null,
+
+        checkOutStatus:
+          attendance?.checkOutStatusId === 1
+            ? "Normal"
+            : attendance?.checkOutStatusId === 2
+              ? "Early"
+              : null,
+
+        workingHours,
+      });
     }
 
-    return {
-      empNo: row.staff.empNo,
+    currentDate = currentDate.add(1, "day");
+  }
 
-      employeeName: row.staff.name,
+  /*
+  |--------------------------------------------------------------------------
+  | Sorting
+  |--------------------------------------------------------------------------
+  */
 
-      designation: row.staff.designation
-        ? `${row.staff.designation.designation} ${row.staff.designation.scale?.scale ?? ""
-          }`.trim()
-        : null,
+  data.sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
 
-      department:
-        row.staff.section?.department?.department ?? null,
+    if (aValue == null) return 1;
+    if (bValue == null) return -1;
 
-      postingPlace:
-        row.staff.postingPlace?.postingPlace ?? null,
+    if (aValue < bValue) {
+      return sortOrder === "asc" ? -1 : 1;
+    }
 
-      section:
-        row.staff.section?.section ?? null,
+    if (aValue > bValue) {
+      return sortOrder === "asc" ? 1 : -1;
+    }
 
-      date: dayjs(row.attendanceDate)
-        .tz("Asia/Karachi")
-        .format("YYYY-MM-DD"),
-
-      attendanceStatusId: row.attendanceStatusId,
-
-      attendanceStatus:
-        row.attendanceStatusId === 1
-          ? "Present"
-          : "Absent",
-
-      checkIn: row.checkInTime
-        ? dayjs(row.checkInTime)
-          .tz("Asia/Karachi")
-          .format("hh:mm:ss A")
-        : null,
-
-      checkInStatusId: row.checkInStatusId,
-
-      checkInStatus:
-        row.checkInStatusId === 1
-          ? "On Time"
-          : row.checkInStatusId === 2
-            ? "Late"
-            : null,
-
-      checkOut: row.checkOutTime
-        ? dayjs(row.checkOutTime)
-          .tz("Asia/Karachi")
-          .format("hh:mm:ss A")
-        : null,
-
-      checkOutStatusId: row.checkOutStatusId,
-
-      checkOutStatus:
-        row.checkOutStatusId === 1
-          ? "On Time"
-          : row.checkOutStatusId === 2
-            ? "Early"
-            : null,
-
-      workingHours,
-    };
+    return 0;
   });
 
+  /*
+  |--------------------------------------------------------------------------
+  | Pagination
+  |--------------------------------------------------------------------------
+  */
+
+  const total = data.length;
+
+  const paginatedData = data.slice(
+    skip,
+    skip + limit
+  );
+
+  /*
+  |--------------------------------------------------------------------------
+  | Summary
+  |--------------------------------------------------------------------------
+  */
+
+  const summary = {
+    total,
+
+    present: data.filter(
+      (row) =>
+        row.attendanceStatus === "Present"
+    ).length,
+
+    absent: data.filter(
+      (row) =>
+        row.attendanceStatus === "Absent"
+    ).length,
+
+    leave: data.filter(
+      (row) =>
+        row.attendanceStatus === "Leave"
+    ).length,
+
+    notMarked: data.filter(
+      (row) =>
+        row.attendanceStatus === "Not Marked"
+    ).length,
+  };
+
   return {
-    data,
+    data: paginatedData,
+
+    summary,
 
     meta: {
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.ceil(
+        total / limit
+      ),
+      totalStaff,
       sortField,
       sortOrder,
     },
