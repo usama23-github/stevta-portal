@@ -11,6 +11,7 @@ import SummaryCards from "./components/summary-cards";
 import AttendanceTable from "./components/attendance-table";
 import { attendanceColumns } from "./columns/attendance-columns";
 import { sectionSummaryColumns, summaryColumns } from "./columns/section-summary-columns";
+import { exportAttendanceExcel } from "@/lib/export-attendance-excel";
 
 import { useAttendance } from "@/hooks/useAttendance";
 
@@ -35,6 +36,16 @@ export default function AttendanceReportsPage() {
         refresh,
     } = useAttendance(query);
 
+    const handleExportExcel = () => {
+        exportAttendanceExcel({
+            summary: summary ?? [],
+            summarySection: summarySection ?? [],
+            rows: rows ?? [],
+            fromDate: query.fromDate,
+            toDate: query.toDate,
+        });
+    };
+
     return (
         <div className="space-y-6 p-6">
             {summary && (
@@ -42,6 +53,7 @@ export default function AttendanceReportsPage() {
                     rows={rows}
                     summary={summary}
                     query={query}
+                    onExportExcel={handleExportExcel}
                 />
             )}
 

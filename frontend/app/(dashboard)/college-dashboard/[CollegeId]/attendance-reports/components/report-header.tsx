@@ -22,12 +22,15 @@ interface Props {
         postingPlace?: string;
         section?: string;
     };
+
+    onExportExcel: () => void;
 }
 
 export default function ReportHeader({
     rows,
     summary,
     query,
+    onExportExcel
 }: Props) {
 
     const today = new Date().toLocaleDateString("en-US", {
@@ -74,6 +77,8 @@ export default function ReportHeader({
                 <Button
                     variant="outline"
                     className="h-11 rounded-xl"
+                    onClick={onExportExcel}
+                    disabled={!rows?.length && !summary?.length}
                 >
                     <FileSpreadsheet className="mr-2 h-5 w-5 text-green-600" />
                     Export Excel
