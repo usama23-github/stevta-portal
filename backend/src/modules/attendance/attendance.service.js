@@ -851,8 +851,6 @@ export const getStaffAttendanceService = async (query) => {
             toDate: {
               gte: startDate,
             },
-
-            status: "APPROVED",
           },
 
           include: {
@@ -1110,7 +1108,7 @@ export const getStaffAttendanceService = async (query) => {
 
         checkOutStatus:
           attendance?.checkOutStatusId === 1
-            ? "Normal"
+            ? "On Time"
             : attendance?.checkOutStatusId === 2
               ? "Early"
               : null,
