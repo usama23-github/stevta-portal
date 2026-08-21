@@ -38,7 +38,8 @@ export const attendanceColumns: TableColumn<AttendanceReport>[] = [
         header: "Status",
         cell: (row) => (
             <AttendanceStatusBadge
-                status={row.attendanceStatusId}
+                status={row.attendanceStatus}
+                leaveType={row.leaveType ?? ""}
             />
         ),
     },

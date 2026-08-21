@@ -15,6 +15,8 @@ export interface AttendanceReport {
 
     attendanceStatus: string;
 
+    leaveType: string | null;
+
     checkIn: string | null;
 
     checkInStatusId: number | null;
@@ -51,7 +53,7 @@ export interface AttendanceSummary {
 }
 
 export interface AttendanceSectionSummary {
-    date: string |  null;
+    date: string | null;
     sectionId: number | null;
     section: string | null;
     totalStaff: number | null;

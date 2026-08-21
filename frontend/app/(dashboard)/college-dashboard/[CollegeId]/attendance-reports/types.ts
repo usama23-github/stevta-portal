@@ -1,6 +1,6 @@
 export interface AttendanceReport {
   id: number;
-  
+
   empNo: string;
 
   employeeName: string;
@@ -11,7 +11,9 @@ export interface AttendanceReport {
 
   postingPlace: string;
 
-  attendanceStatus: number;
+  attendanceStatus: string;
+
+  leaveType: string | null;
 
   checkIn: string | null;
 

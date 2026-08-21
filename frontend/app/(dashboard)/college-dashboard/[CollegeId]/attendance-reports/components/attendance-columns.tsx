@@ -34,11 +34,19 @@ export const columns: ColumnDef<AttendanceReport>[] = [
         accessorKey: "attendanceStatus",
         header: "Attendance",
 
-        cell: ({ row }) => (
-            <AttendanceStatusBadge
-                status={row.original.attendanceStatus}
-            />
-        ),
+        cell: ({ row }) => {
+            return (
+
+
+                < AttendanceStatusBadge
+                    status={row.original.attendanceStatus}
+                    leaveType={row.original.leaveType ?? ""}
+
+                />
+            )
+        }
+
+        ,
     },
     {
         accessorKey: "checkIn",
