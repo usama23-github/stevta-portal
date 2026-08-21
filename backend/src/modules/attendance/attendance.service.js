@@ -441,7 +441,6 @@ export const getStaffAttendanceService = async (query) => {
           select: {
             empNo: true,
             name: true,
-            department: true,
 
             designation: {
               select: {
@@ -463,6 +462,12 @@ export const getStaffAttendanceService = async (query) => {
             section: {
               select: {
                 section: true,
+
+                department: {
+                  select: {
+                    department: true,
+                  },
+                },
               },
             },
           },
@@ -509,7 +514,8 @@ export const getStaffAttendanceService = async (query) => {
           }`.trim()
         : null,
 
-      department: row.staff.department,
+      department:
+        row.staff.section?.department?.department ?? null,
 
       postingPlace:
         row.staff.postingPlace?.postingPlace ?? null,
@@ -553,7 +559,7 @@ export const getStaffAttendanceService = async (query) => {
 
       checkOutStatus:
         row.checkOutStatusId === 1
-          ? "Normal"
+          ? "On Time"
           : row.checkOutStatusId === 2
             ? "Early"
             : null,
