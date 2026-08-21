@@ -826,16 +826,38 @@ export const getLeaves = async ({
         };
     }
 
-    // Date range
+    // Date range - find leaves overlapping the selected period
+
     if (fromDate || toDate) {
-        where.fromDate = {};
-
-        if (fromDate) {
-            where.fromDate.gte = new Date(fromDate);
-        }
-
-        if (toDate) {
-            where.fromDate.lte = new Date(toDate);
+        if (fromDate && toDate) {
+            where.AND = [
+                {
+                    fromDate: {
+                        lte: dayjs(toDate)
+                            .endOf("day")
+                            .toDate(),
+                    },
+                },
+                {
+                    toDate: {
+                        gte: dayjs(fromDate)
+                            .startOf("day")
+                            .toDate(),
+                    },
+                },
+            ];
+        } else if (fromDate) {
+            where.toDate = {
+                gte: dayjs(fromDate)
+                    .startOf("day")
+                    .toDate(),
+            };
+        } else if (toDate) {
+            where.fromDate = {
+                lte: dayjs(toDate)
+                    .endOf("day")
+                    .toDate(),
+            };
         }
     }
 
