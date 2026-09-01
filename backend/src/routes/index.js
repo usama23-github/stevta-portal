@@ -11,6 +11,7 @@ import departmentRoutes from "../modules/department/department.routes.js";
 import designationRoutes from "../modules/designation/designation.routes.js";
 import dashboardRoutes from "../modules/dashboard/dashboard.routes.js";
 import leavesRoutes from "../modules/leave/leave.routes.js";
+import shiftRoutes from "../modules/shift/shift.routes.js";
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use("/department", departmentRoutes);
 router.use("/designations", designationRoutes);
 router.use("/dashboard", dashboardRoutes);
 router.use("/leave", leavesRoutes);
+router.use("/shift", shiftRoutes);
 
 router.use("/imports", importRoutes);
 
