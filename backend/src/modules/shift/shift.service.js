@@ -117,3 +117,29 @@ export const createShiftService = async (data) => {
 
     return shift;
 };
+
+export const deleteShiftTimingService = async (timingId) => {
+    if (!timingId) {
+        throw new Error("Shift timing ID is required");
+    }
+
+    const shiftTiming = await prisma.shiftTiming.findUnique({
+        where: {
+            id: timingId,
+        },
+    });
+
+    if (!shiftTiming) {
+        throw new Error("Shift timing not found");
+    }
+
+    await prisma.shiftTiming.delete({
+        where: {
+            id: timingId,
+        },
+    });
+
+    return {
+        id: timingId,
+    };
+};

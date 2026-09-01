@@ -20,3 +20,24 @@ export const createShift = async (req, res) => {
         });
     }
 };
+
+export const deleteShiftTiming = async (req, res) => {
+    try {
+        const { timingId } = req.params;
+
+        const result = await deleteShiftTimingService(timingId);
+
+        return res.status(200).json({
+            success: true,
+            message: "Shift timing deleted successfully",
+            data: result,
+        });
+    } catch (error) {
+        console.error("Delete shift timing error:", error);
+
+        return res.status(400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
