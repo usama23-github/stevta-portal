@@ -12,18 +12,20 @@ datasource db {
 // =========================
 
 model PostingPlace {
-  id            Int      @id @default(autoincrement())
-  postingPlace  String   @unique
-  order         Int?
+  id           Int    @id @default(autoincrement())
+  postingPlace String @unique
+  order        Int?
 
-  sections      Section[]
-  departments   Department[]
-  designations  Designation[]
-  staff         Staff[]
-  leaves        Leave[]
+  sections     Section[]
+  departments  Department[]
+  designations Designation[]
+  staff        Staff[]
+  leaves       Leave[]
+  ShiftTimings ShiftTiming[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  staffShiftHistories StaffShiftHistory[]
 }
 
 // =========================
@@ -31,21 +33,22 @@ model PostingPlace {
 // =========================
 
 model Section {
-  id              Int              @id @default(autoincrement())
-  section         String
+  id      Int    @id @default(autoincrement())
+  section String
 
-  postingPlaceId  Int
-  postingPlace    PostingPlace     @relation(fields: [postingPlaceId], references: [id])
+  postingPlaceId Int
+  postingPlace   PostingPlace @relation(fields: [postingPlaceId], references: [id])
 
-  departmentId    Int?
-  department      Department?      @relation(fields: [departmentId], references: [id])
+  departmentId Int?
+  department   Department? @relation(fields: [departmentId], references: [id])
 
-  staff           Staff[]
+  staff Staff[]
 
-  leave           Leave[]
+  leave Leave[]
 
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  staffShiftHistories StaffShiftHistory[]
 
   @@unique([section, postingPlaceId, departmentId])
   @@index([postingPlaceId])
@@ -57,16 +60,16 @@ model Section {
 // =========================
 
 model Department {
-  id              Int      @id @default(autoincrement())
-  department      String
+  id         Int    @id @default(autoincrement())
+  department String
 
-  postingPlaceId  Int
-  postingPlace    PostingPlace @relation(fields: [postingPlaceId], references: [id])
+  postingPlaceId Int
+  postingPlace   PostingPlace @relation(fields: [postingPlaceId], references: [id])
 
-  section         Section[]
+  section Section[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([department, postingPlaceId])
   @@index([postingPlaceId])
@@ -77,15 +80,17 @@ model Department {
 // =========================
 
 model Region {
-  id          Int      @id
+  id Int @id
 
-  name        String
+  name String
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  districts   District[]
-  leaves      Leave[]
+  districts           District[]
+  leaves              Leave[]
+  shiftTimings        ShiftTiming[]
+  staffShiftHistories StaffShiftHistory[]
 }
 
 // =========================
@@ -93,18 +98,20 @@ model Region {
 // =========================
 
 model District {
-  id            Int      @id
+  id Int @id
 
-  name          String
+  name String
 
-  regionId      Int
+  regionId Int
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   region Region @relation(fields: [regionId], references: [id])
 
-  subdivisions  Subdivision[]
+  subdivisions        Subdivision[]
+  shiftTimings        ShiftTiming[]
+  staffShiftHistories StaffShiftHistory[]
 
   @@index([regionId])
 }
@@ -114,14 +121,14 @@ model District {
 // =========================
 
 model Subdivision {
-  id            Int      @id
+  id Int @id
 
-  name          String
+  name String
 
-  districtId    Int
+  districtId Int
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   district District @relation(fields: [districtId], references: [id])
 
@@ -133,28 +140,28 @@ model Subdivision {
 // =========================
 
 model Designation {
-  id              Int           @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  designation     String
+  designation String
 
-  scaleId         Int
-  postingPlaceId  Int
+  scaleId        Int
+  postingPlaceId Int
 
-  scale           Scale         @relation(fields: [scaleId], references: [id])
-  postingPlace    PostingPlace  @relation(fields: [postingPlaceId], references: [id])
+  scale        Scale        @relation(fields: [scaleId], references: [id])
+  postingPlace PostingPlace @relation(fields: [postingPlaceId], references: [id])
 
-  staff           Staff[]
+  staff Staff[]
 
-  leave           Leave[]
+  leave Leave[]
 
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([scaleId])
-  @@index([postingPlaceId])
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  staffShiftHistories StaffShiftHistory[]
 
   // Prevent duplicate designation names within the same posting place and scale
   @@unique([designation, postingPlaceId, scaleId])
+  @@index([scaleId])
+  @@index([postingPlaceId])
 }
 
 // =========================
@@ -162,31 +169,31 @@ model Designation {
 // =========================
 
 model Staff {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  empNo           String   @unique
-  name            String
+  empNo String @unique
+  name  String
 
-  designationId   Int?
-  department      String?
+  designationId Int?
+  department    String?
 
-  postingPlaceId  Int?
-  sectionId       Int?
-  shiftId         Int?
+  postingPlaceId Int?
+  sectionId      Int?
+  shiftId        Int?
 
-  designation     Designation?  @relation(fields: [designationId], references: [id])
-  postingPlace    PostingPlace? @relation(fields: [postingPlaceId], references: [id])
-  section         Section?      @relation(fields: [sectionId], references: [id])
-  shift           Shift?        @relation(fields: [shiftId], references: [id])
+  designation  Designation?  @relation(fields: [designationId], references: [id])
+  postingPlace PostingPlace? @relation(fields: [postingPlaceId], references: [id])
+  section      Section?      @relation(fields: [sectionId], references: [id])
+  shift        Shift?        @relation(fields: [shiftId], references: [id])
 
-  attendances     Attendance[]
+  attendances Attendance[]
 
-  leaves          Leave[]
+  leaves Leave[]
 
-  shiftHistory    StaffShiftHistory[]
+  shiftHistory StaffShiftHistory[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([postingPlaceId])
   @@index([sectionId])
@@ -201,13 +208,13 @@ model Staff {
 // =========================
 
 model Scale {
-  id            Int           @id @default(autoincrement())
-  scale         String        @unique
+  id    Int    @id @default(autoincrement())
+  scale String @unique
 
-  designations  Designation[]
+  designations Designation[]
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // =========================
@@ -215,31 +222,30 @@ model Scale {
 // =========================
 
 model Attendance {
-  id                 String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  empNo              String
+  empNo String
 
-  attendanceDate     DateTime
+  attendanceDate DateTime
 
   attendanceStatusId Int
 
-  checkInTime        DateTime?
-  checkInStatusId    Int?
+  checkInTime     DateTime?
+  checkInStatusId Int?
 
-  checkOutTime       DateTime?
-  checkOutStatusId   Int?
+  checkOutTime     DateTime?
+  checkOutStatusId Int?
 
-  leaveTypeId        Int?
+  leaveTypeId Int?
 
-  deviceId           Int?
+  deviceId Int?
 
-  staff              Staff    @relation(fields: [empNo], references: [empNo])
+  staff Staff @relation(fields: [empNo], references: [empNo])
 
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([empNo, attendanceDate])
-
   @@index([attendanceDate])
   @@index([empNo])
   @@index([attendanceStatusId])
@@ -252,101 +258,99 @@ model Attendance {
 // =========================
 
 model AttendanceLogs {
-  id            String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  empNo         String
-  inOutStatus   Int
-  dateTime      DateTime
-  deviceId      Int
+  empNo       String
+  inOutStatus Int
+  dateTime    DateTime
+  deviceId    Int
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([empNo, dateTime, deviceId])
-
   @@index([empNo])
   @@index([dateTime])
   @@index([empNo, dateTime])
-
 }
 
 model LeaveType {
-  id          Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  name        String   @unique
+  name String @unique
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  leaves      Leave[]
+  leaves Leave[]
 }
 
 model Leave {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  staffId         String
+  staffId String
 
-  postingPlaceId  Int?
+  postingPlaceId Int?
 
-  regionId        Int?
+  regionId Int?
 
-  designationId   Int?
+  designationId Int?
 
-  sectionId       Int?
+  sectionId Int?
 
-  leaveTypeId     Int
+  leaveTypeId Int
 
-  fromDate        DateTime
+  fromDate DateTime
 
-  toDate          DateTime
+  toDate DateTime
 
-  totalDays       Decimal   @db.Decimal(5,2)
+  totalDays Decimal @db.Decimal(5, 2)
 
-  reason          String?
+  reason String?
 
-  remarks         String?
+  remarks String?
 
-  createdById     String?
+  createdById String?
 
-  appliedAt       DateTime @default(now())
+  appliedAt DateTime @default(now())
 
-  approvedAt      DateTime?
+  approvedAt DateTime?
 
-  rejectedAt      DateTime?
+  rejectedAt DateTime?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  updatedAt       DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
-  staff           Staff @relation(fields: [staffId], references: [id])
+  staff Staff @relation(fields: [staffId], references: [id])
 
-  postingPlace    PostingPlace? @relation(fields: [postingPlaceId], references: [id])
+  postingPlace PostingPlace? @relation(fields: [postingPlaceId], references: [id])
 
-  region          Region? @relation(fields: [regionId], references: [id])
+  region Region? @relation(fields: [regionId], references: [id])
 
-  designation     Designation? @relation(fields: [designationId], references: [id])
+  designation Designation? @relation(fields: [designationId], references: [id])
 
-  section         Section? @relation(fields: [sectionId], references: [id])
+  section Section? @relation(fields: [sectionId], references: [id])
 
-  leaveType       LeaveType @relation(fields: [leaveTypeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
 
-  createdBy       User? @relation(fields: [createdById], references: [id])
+  createdBy User? @relation(fields: [createdById], references: [id])
 
-  documents       LeaveDocument[]
+  documents LeaveDocument[]
 }
 
 model LeaveDocument {
-  id          String @id @default(uuid())
+  id String @id @default(uuid())
 
-  leaveId     String
+  leaveId String
 
-  fileName    String
+  fileName String
 
-  filePath    String
+  filePath String
 
-  uploadedAt  DateTime @default(now())
+  uploadedAt DateTime @default(now())
 
-  leave       Leave @relation(fields: [leaveId], references: [id])
+  leave Leave @relation(fields: [leaveId], references: [id])
 }
 
 // =========================
@@ -373,20 +377,19 @@ enum StaffType {
 // =========================
 
 model User {
-  id            String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  email         String   @unique
-  password      String
+  email    String @unique
+  password String
 
-  role          UserRole
+  role UserRole
 
-  isActive      Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   createdLeaves Leave[]
-
 }
 
 // =========================
@@ -401,62 +404,82 @@ enum UserRole {
 }
 
 model Shift {
-  id              Int      @id @default(autoincrement())
-  name            String
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(100)
 
-  staff           Staff[]
-  shiftTimings    ShiftTiming[]
-  staffHistory    StaffShiftHistory[]
+  staff        Staff[]
+  shiftTimings ShiftTiming[]
+  staffHistory StaffShiftHistory[]
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
 }
 
 model StaffShiftHistory {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  staffId         String
-  shiftId         Int
+  staffId String
+  shiftId Int
 
-  effectiveFrom   DateTime
-  effectiveTo     DateTime?
+  designationId  Int?
+  sectionId      Int?
+  postingPlaceId Int
+  regionId       Int?
+  districtId     Int?
 
-  changedById     String?
-  reason          String?
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
 
-  staff           Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
-  shift           Shift    @relation(fields: [shiftId], references: [id])
+  changedById String?
+  reason      String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  shift Shift @relation(fields: [shiftId], references: [id])
 
-  @@index([staffId])
+  designation  Designation? @relation(fields: [designationId], references: [id])
+  section      Section?     @relation(fields: [sectionId], references: [id])
+  postingPlace PostingPlace @relation(fields: [postingPlaceId], references: [id])
+  region       Region?      @relation(fields: [regionId], references: [id])
+  district     District?    @relation(fields: [districtId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([staffId, effectiveFrom])
   @@index([shiftId])
-  @@index([effectiveFrom])
-  @@index([effectiveTo])
+  @@index([postingPlaceId])
+  @@index([effectiveFrom, effectiveTo])
 }
 
 model ShiftTiming {
-  id              String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  shiftId         Int
+  shiftId        Int
+  postingPlaceId Int
+  regionId       Int?
+  districtId     Int?
 
-  shiftStartTime  DateTime
-  checkInOnTime   DateTime
-  checkInLate     DateTime
+  shiftStartTime DateTime @db.Time
+  checkInOnTime  DateTime @db.Time
+  checkInLate    DateTime @db.Time
+  checkOutEarly  DateTime @db.Time
+  checkOutOnTime DateTime @db.Time
+  absentTime     DateTime @db.Time
 
-  checkOutEarly   DateTime
-  checkOutOnTime  DateTime
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
 
-  effectiveFrom   DateTime
-  effectiveTo     DateTime?
+  shift        Shift        @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  postingPlace PostingPlace @relation(fields: [postingPlaceId], references: [id])
+  region       Region?      @relation(fields: [regionId], references: [id])
+  district     District?    @relation(fields: [districtId], references: [id])
 
-  shift           Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([shiftId])
-  @@index([effectiveFrom])
-  @@index([effectiveTo])
+  @@index([shiftId, effectiveFrom])
+  @@index([postingPlaceId])
+  @@index([effectiveFrom, effectiveTo])
 }
