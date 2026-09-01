@@ -23,8 +23,6 @@ import {
   LayoutDashboard,
   FilePlus2,
   ClipboardList,
-  CircleCheck,
-  CircleX,
   WalletCards,
   ListChecks,
 } from "lucide-react";
@@ -106,6 +104,47 @@ const routes = [
     ],
   },
 
+  // ====================================================
+  // SHIFT MANAGEMENT
+  // ====================================================
+
+  {
+    label: "Shift Management",
+    href: "/shift-management",
+    icon: CalendarDays,
+    activeIcon: CalendarDays,
+
+    children: [
+      {
+        label: "Shift Records",
+        href: "/shift-management",
+        icon: LayoutDashboard,
+      },
+
+      {
+        label: "Shift Timings",
+        href: "/shift-management/timings",
+        icon: ClipboardList,
+      },
+
+      {
+        label: "Assign Shift",
+        href: "/shift-management/assign",
+        icon: Users,
+      },
+
+      {
+        label: "Shift History",
+        href: "/shift-management/history",
+        icon: ArrowLeftRight,
+      },
+    ],
+  },
+
+  // ====================================================
+  // OTHER MENU ITEMS
+  // ====================================================
+
   {
     label: "Sanctioned Posts",
     href: "/sanctioned-posts",
@@ -137,57 +176,100 @@ export const Navigation = () => {
   const pathname = usePathname();
 
   // ====================================================
-  // LEAVE MANAGEMENT ACTIVE
+  // BASE PATHS
   // ====================================================
 
   const leaveBasePath =
-    `/ college - dashboard / ${workspaceId}/leave-management`;
+    `/college-dashboard/${workspaceId}/leave-management`;
+
+  const shiftBasePath =
+    `/college-dashboard/${workspaceId}/shift-management`;
+
+  // ====================================================
+  // ACTIVE STATES
+  // ====================================================
 
   const isLeaveActive =
     pathname === leaveBasePath ||
     pathname.startsWith(`${leaveBasePath}/`);
 
-  // Automatically open Leave Management
-  // when one of its pages is active.
-  const [openLeave, setOpenLeave] =
-    useState(isLeaveActive);
+  const isShiftActive =
+    pathname === shiftBasePath ||
+    pathname.startsWith(`${shiftBasePath}/`);
+
+  // ====================================================
+  // OPEN MENUS
+  // Automatically open menu if its route is active
+  // ====================================================
+
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
+    "/leave-management": isLeaveActive,
+    "/shift-management": isShiftActive,
+  });
+
+  // ====================================================
+  // TOGGLE MENU
+  // ====================================================
+
+  const toggleMenu = (href: string) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [href]: !prev[href],
+    }));
+  };
+
+  // ====================================================
+  // RENDER
+  // ====================================================
 
   return (
     <nav className="space-y-1">
-
       {routes.map((item) => {
         const fullHref =
           `/college-dashboard/${workspaceId}${item.href}`;
 
         const hasChildren =
-          item.children &&
-          item.children.length > 0;
+          item.children && item.children.length > 0;
+
+        // ==================================================
+        // NORMAL ACTIVE STATE
+        // ==================================================
 
         const isActive =
           pathname === fullHref;
+
+        // ==================================================
+        // PARENT ACTIVE STATE
+        // ==================================================
+
+        const isParentActive =
+          item.href === "/leave-management"
+            ? isLeaveActive
+            : item.href === "/shift-management"
+              ? isShiftActive
+              : isActive;
 
         // ==================================================
         // PARENT MENU WITH CHILDREN
         // ==================================================
 
         if (hasChildren) {
-          const Icon =
-            isLeaveActive
-              ? item.activeIcon
-              : item.icon;
+          const Icon = isParentActive
+            ? item.activeIcon
+            : item.icon;
+
+          const isOpen =
+            openMenus[item.href] || false;
 
           return (
             <div key={item.href}>
-
               {/* ==========================================
                   PARENT BUTTON
               ========================================== */}
 
               <button
                 type="button"
-                onClick={() =>
-                  setOpenLeave((prev) => !prev)
-                }
+                onClick={() => toggleMenu(item.href)}
                 className={cn(
                   "flex w-full items-center justify-between",
                   "rounded-md p-2.5",
@@ -195,47 +277,40 @@ export const Navigation = () => {
                   "text-neutral-500",
                   "hover:bg-white hover:text-primary",
 
-                  isLeaveActive &&
+                  isParentActive &&
                   "bg-white text-primary shadow-sm"
                 )}
               >
-
                 <div className="flex items-center gap-2.5">
-
                   <Icon className="size-5 shrink-0" />
 
                   <span>
                     {item.label}
                   </span>
-
                 </div>
 
                 <ChevronDown
                   className={cn(
                     "size-4 shrink-0 transition-transform duration-200",
-                    openLeave && "rotate-180"
+                    isOpen && "rotate-180"
                   )}
                 />
-
               </button>
 
               {/* ==========================================
                   SUB NAVIGATION
               ========================================== */}
 
-              {openLeave && (
+              {isOpen && (
                 <div className="relative ml-4 mt-1 space-y-0.5 border-l border-slate-200 pl-3">
-
                   {item.children?.map((child) => {
-
                     const childHref =
                       `/college-dashboard/${workspaceId}${child.href}`;
 
                     const childActive =
                       pathname === childHref;
 
-                    const ChildIcon =
-                      child.icon;
+                    const ChildIcon = child.icon;
 
                     return (
                       <Link
@@ -243,7 +318,6 @@ export const Navigation = () => {
                         href={childHref}
                         className="block"
                       >
-
                         <div
                           className={cn(
                             "flex items-center gap-2.5",
@@ -259,7 +333,6 @@ export const Navigation = () => {
                             "bg-white text-primary shadow-sm"
                           )}
                         >
-
                           <ChildIcon
                             className={cn(
                               "size-4 shrink-0",
@@ -273,16 +346,12 @@ export const Navigation = () => {
                           <span>
                             {child.label}
                           </span>
-
                         </div>
-
                       </Link>
                     );
                   })}
-
                 </div>
               )}
-
             </div>
           );
         }
@@ -291,10 +360,9 @@ export const Navigation = () => {
         // NORMAL NAVIGATION ITEM
         // ==================================================
 
-        const Icon =
-          isActive
-            ? item.activeIcon
-            : item.icon;
+        const Icon = isActive
+          ? item.activeIcon
+          : item.icon;
 
         return (
           <Link
@@ -302,7 +370,6 @@ export const Navigation = () => {
             href={fullHref}
             className="block"
           >
-
             <div
               className={cn(
                 "flex items-center gap-2.5",
@@ -317,7 +384,6 @@ export const Navigation = () => {
                 "bg-white text-primary shadow-sm"
               )}
             >
-
               <Icon
                 className={cn(
                   "size-5 shrink-0",
@@ -331,14 +397,10 @@ export const Navigation = () => {
               <span>
                 {item.label}
               </span>
-
             </div>
-
           </Link>
         );
       })}
-
     </nav>
   );
 };
-
