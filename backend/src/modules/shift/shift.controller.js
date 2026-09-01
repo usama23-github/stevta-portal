@@ -1,8 +1,8 @@
 import {
-    createShift,
-    deleteShiftTiming,
-    getAllShiftTimings,
-} from "./shift.controller.js"
+    createShiftService,
+    deleteShiftTimingService,
+    getAllShiftTimingsService,
+} from "./shift.service.js"
 
 export const createShift = async (req, res) => {
     try {
