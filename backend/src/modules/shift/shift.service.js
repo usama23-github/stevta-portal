@@ -1,4 +1,8 @@
 import { PrismaClient } from "@prisma/client";
+import {
+    formatTimeInKarachi,
+    formatDateTimeInKarachi,
+} from "../../utils/date.js";
 
 const prisma = new PrismaClient();
 
@@ -142,4 +146,37 @@ export const deleteShiftTimingService = async (timingId) => {
     return {
         id: timingId,
     };
+};
+
+export const getAllShiftTimingsService = async () => {
+    const timings = await prisma.shiftTiming.findMany({
+        include: {
+            shift: true,
+            postingPlace: true,
+            region: true,
+            district: true,
+        },
+        orderBy: [
+            {
+                shiftId: "asc",
+            },
+            {
+                effectiveFrom: "desc",
+            },
+        ],
+    });
+
+    return timings.map((timing) => ({
+        ...timing,
+
+        shiftStartTime: formatTimeInKarachi(timing.shiftStartTime),
+        checkInOnTime: formatTimeInKarachi(timing.checkInOnTime),
+        checkInLate: formatTimeInKarachi(timing.checkInLate),
+        checkOutEarly: formatTimeInKarachi(timing.checkOutEarly),
+        checkOutOnTime: formatTimeInKarachi(timing.checkOutOnTime),
+        absentTime: formatTimeInKarachi(timing.absentTime),
+
+        effectiveFrom: formatDateTimeInKarachi(timing.effectiveFrom),
+        effectiveTo: formatDateTimeInKarachi(timing.effectiveTo),
+    }));
 };

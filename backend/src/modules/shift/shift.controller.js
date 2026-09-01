@@ -1,6 +1,8 @@
 import {
-    createShiftService,
-} from "./shift.service.js";
+    createShift,
+    deleteShiftTiming,
+    getAllShiftTimings,
+} from "./shift.controller.js"
 
 export const createShift = async (req, res) => {
     try {
@@ -38,6 +40,26 @@ export const deleteShiftTiming = async (req, res) => {
         return res.status(400).json({
             success: false,
             message: error.message,
+        });
+    }
+};
+
+export const getAllShiftTimings = async (req, res) => {
+    try {
+        const timings = await getAllShiftTimingsService();
+
+        return res.status(200).json({
+            success: true,
+            message: "Shift timings fetched successfully",
+            data: timings,
+        });
+    } catch (error) {
+        console.error("Get all shift timings error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch shift timings",
+            error: error.message,
         });
     }
 };
